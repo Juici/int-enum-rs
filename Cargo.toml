@@ -1,0 +1,23 @@
+[package]
+name = "int-enum"
+version = "0.1.0"
+authors = ["James Whaley <juicy66173@gmail.com>"]
+description = "A procedural macro for conversion between integer and enum types."
+license = "MIT"
+readme = "README.md"
+
+documentation = "https://docs.rs/int-enum"
+homepage = "https://github.com/Juici/int-enum-rs"
+repository = "https://github.com/Juici/int-enum-rs"
+
+categories = []
+keywords = ["enum", "int"]
+
+edition = "2018"
+
+[workspace]
+members = ["int-enum-impl"]
+
+[dependencies]
+num-traits = "0.2"
+int-enum-impl = { version = "0.1",  path = "./int-enum-impl" }
