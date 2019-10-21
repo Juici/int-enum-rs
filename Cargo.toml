@@ -10,9 +10,6 @@ documentation = "https://docs.rs/int-enum"
 homepage = "https://github.com/Juici/int-enum-rs"
 repository = "https://github.com/Juici/int-enum-rs"
 
-categories = []
-keywords = ["enum", "int"]
-
 edition = "2018"
 
 [workspace]

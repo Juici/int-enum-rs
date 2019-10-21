@@ -3,6 +3,11 @@ name = "int-enum-impl"
 version = "0.1.0"
 authors = ["James Whaley <juicy66173@gmail.com>"]
 description = "A procedural macro for conversion between integer and enum types."
+license = "MIT"
+
+documentation = "https://docs.rs/int-enum"
+homepage = "https://github.com/Juici/int-enum-rs"
+repository = "https://github.com/Juici/int-enum-rs"
 
 edition = "2018"
 
