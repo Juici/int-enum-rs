@@ -21,12 +21,10 @@ use num_traits::PrimInt;
 ///     Two = 2,
 /// }
 ///
-/// fn main() {
-///     assert_eq!(SmallInt::One.as_int(), Some(1));
+/// assert_eq!(SmallInt::One.as_int(), Some(1));
 ///
-///     assert_eq!(SmallInt::from_int(2), Some(SmallInt::Two));
-///     assert_eq!(SmallInt::from_int(5), None);
-/// }
+/// assert_eq!(SmallInt::from_int(2), Some(SmallInt::Two));
+/// assert_eq!(SmallInt::from_int(5), None);
 /// ```
 pub use int_enum_impl::int_enum;
 
