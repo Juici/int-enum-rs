@@ -3,7 +3,8 @@
 #![doc(html_root_url = "https://docs.rs/int-enum/*")]
 #![deny(missing_docs)]
 
-// Use num-traits PrimInt to assert that the type passed to the macro is a primitive integer type.
+// Use num-traits PrimInt to assert that the type passed to the macro is a
+// primitive integer type.
 use num_traits::PrimInt;
 
 /// Attribute macro taking the integer type for the enum.
