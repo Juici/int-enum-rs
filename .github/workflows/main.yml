@@ -1,0 +1,82 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [stable, beta, nightly, macos, windows]
+        include:
+          - build: stable
+            os: ubuntu-latest
+            rust: stable
+          - build: beta
+            os: ubuntu-latest
+            rust: beta
+          - build: nightly
+            os: ubuntu-latest
+            rust: nightly
+          - build: macos
+            os: macos-latest
+            rust: stable
+          - build: windows
+            os: windows-latest
+            rust: stable
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust (rustup)
+        run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
+        if: matrix.os != 'macos-latest'
+        shell: bash
+      - name: Install Rust (macos)
+        run: |
+          curl https://sh.rustup.rs | sh -s -- -y
+          echo "##[add-path]$HOME/.cargo/bin"
+        if: matrix.os == 'macos-latest'
+      - run: cargo build
+      - run: cargo test
+      - run: cargo test --no-default-features
+      - run: cargo test --all-features
+
+  msrv:
+    name: MSRV
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: rustup update 1.36.0 --no-self-update && rustup default 1.36.0
+        shell: bash
+      - run: cargo build
+
+  rustfmt:
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: rustup update nightly && rustup default nightly && rustup component add rustfmt
+      - run: cargo fmt -- --check
+
+  publish_docs:
+    name: Publish Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Rust
+        run: rustup update stable && rustup default stable
+      - name: Build documentation
+        run: cargo doc --no-deps --all-features
+      - name: Publish documentation
+        run: |
+          cd target/doc
+          echo '<meta http-equiv="refresh" content="0;url=int-enum/index.html">' > index.html
+          git init
+          git add .
+          git -c user.name='ci' -c user.email='ci' commit -m init
+          git push -f -q https://git:${{ secrets.github_token }}@github.com/${{ github.repository }} HEAD:gh-pages
+        if: github.event_name == 'push' && github.event.ref == 'refs/heads/master'
