@@ -28,6 +28,10 @@ use num_traits::PrimInt;
 /// ```
 pub use int_enum_impl::int_enum;
 
+// Re-export `Option` for macro.
+#[doc(hidden)]
+pub use core::option::Option;
+
 /// Trait used for implementations of integer and enum conversions.
 pub trait IntEnum {
     /// The primitive integer type.

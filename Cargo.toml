@@ -18,3 +18,6 @@ members = ["int-enum-impl"]
 [dependencies]
 num-traits = "0.2"
 int-enum-impl = { version = "0.1",  path = "int-enum-impl" }
+
+[dev-dependencies]
+int-enum = { path = "./"}
