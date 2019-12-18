@@ -1,5 +1,6 @@
 //! A procedural macro for conversion between integer and enum types.
 
+#![no_std]
 #![doc(html_root_url = "https://docs.rs/int-enum/*")]
 #![deny(missing_docs)]
 
