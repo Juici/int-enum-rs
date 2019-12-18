@@ -1,6 +1,6 @@
 [package]
 name = "int-enum"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["James Whaley <juicy66173@gmail.com>"]
 description = "A procedural macro for conversion between integer and enum types."
 license = "MIT"
@@ -17,7 +17,7 @@ members = ["int-enum-impl"]
 
 [dependencies]
 num-traits = "0.2"
-int-enum-impl = { version = "0.1",  path = "int-enum-impl" }
+int-enum-impl = { version = "0.2",  path = "int-enum-impl" }
 
 [dev-dependencies]
 int-enum = { path = "./"}
