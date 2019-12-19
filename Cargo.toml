@@ -15,8 +15,11 @@ edition = "2018"
 [workspace]
 members = ["int-enum-impl"]
 
+[features]
+default = ["std"]
+std = []
+
 [dependencies]
-num-traits = "0.2"
 int-enum-impl = { version = "0.2",  path = "int-enum-impl" }
 
 [dev-dependencies]

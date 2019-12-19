@@ -10,24 +10,20 @@ pub enum Advanced {
     Twenty = 20,
     /// Docs for negative five.
     NegativeFive = -5,
-    /// Docs for other.
-    Other,
 }
 
 #[test]
 fn advanced_as_int() {
-    assert_eq!(Advanced::NegativeOne.as_int(), Some(-1));
-    assert_eq!(Advanced::Twenty.as_int(), Some(20));
-    assert_eq!(Advanced::NegativeFive.as_int(), Some(-5));
-
-    assert_eq!(Advanced::Other.as_int(), None);
+    assert_eq!(Advanced::NegativeOne.as_int(), -1);
+    assert_eq!(Advanced::Twenty.as_int(), 20);
+    assert_eq!(Advanced::NegativeFive.as_int(), -5);
 }
 
 #[test]
 fn advanced_from_int() {
-    assert_eq!(Advanced::from_int(-1), Some(Advanced::NegativeOne));
-    assert_eq!(Advanced::from_int(20), Some(Advanced::Twenty));
-    assert_eq!(Advanced::from_int(-5), Some(Advanced::NegativeFive));
+    assert_eq!(Advanced::from_int(-1), Ok(Advanced::NegativeOne));
+    assert_eq!(Advanced::from_int(20), Ok(Advanced::Twenty));
+    assert_eq!(Advanced::from_int(-5), Ok(Advanced::NegativeFive));
 
-    assert_eq!(Advanced::from_int(0), None);
+    assert!(Advanced::from_int(0).is_err());
 }

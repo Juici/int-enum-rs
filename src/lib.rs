@@ -1,48 +1,53 @@
 //! A procedural macro for conversion between integer and enum types.
 
-#![no_std]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![doc(html_root_url = "https://docs.rs/int-enum/*")]
 #![deny(missing_docs)]
 
-// Use num-traits PrimInt to assert that the type passed to the macro is a
-// primitive integer type.
-use num_traits::PrimInt;
+#[doc(hidden)]
+pub extern crate core as __core;
+
+mod error;
+mod int;
+
+use core::fmt::Debug;
+
+use self::int::PrimInt;
+
+/// Trait used for implementations of integer and enum conversions.
+pub trait IntEnum: Sized + Debug {
+    /// Primitive integer type for conversions.
+    type Int: PrimInt;
+
+    /// Returns the integer value of the enum.
+    fn as_int(&self) -> Self::Int;
+
+    /// Converts an integer into the enum.
+    fn from_int(n: Self::Int) -> Result<Self, IntEnumError<Self>>;
+}
 
 /// Attribute macro taking the integer type for the enum.
 ///
-/// # Example
+/// # Examples
+///
+/// Basic usage:
 ///
 /// ```
 /// use int_enum::*;
 ///
 /// #[int_enum(u8)]
-/// #[derive(Debug, PartialEq)]
+/// #[derive(Debug, PartialEq, Eq)]
 /// pub enum SmallInt {
 ///     One = 1,
 ///     Two = 2,
 /// }
 ///
-/// assert_eq!(SmallInt::One.as_int(), Some(1));
+/// assert_eq!(SmallInt::One.as_int(), 1);
 ///
-/// assert_eq!(SmallInt::from_int(2), Some(SmallInt::Two));
-/// assert_eq!(SmallInt::from_int(5), None);
+/// assert_eq!(SmallInt::from_int(2), Ok(SmallInt::Two));
+/// assert!(SmallInt::from_int(5).is_err());
 /// ```
 pub use int_enum_impl::int_enum;
 
-// Re-export `Option` for macro.
-#[doc(hidden)]
-pub use core::option::Option;
-
-/// Trait used for implementations of integer and enum conversions.
-pub trait IntEnum {
-    /// The primitive integer type.
-    type Int: PrimInt;
-
-    /// Gets the integer value of the enum.
-    fn as_int(&self) -> Option<Self::Int>;
-
-    /// Gets the enum type for the given integer.
-    fn from_int(int: Self::Int) -> Option<Self>
-    where
-        Self: Sized;
-}
+#[doc(inline)]
+pub use self::error::IntEnumError;
