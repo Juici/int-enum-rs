@@ -12,7 +12,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-int-enum = "0.1"
+int-enum = "0.3"
 ```
 
 
