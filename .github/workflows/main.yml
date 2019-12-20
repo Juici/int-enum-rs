@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Install Rust
-        run: rustup update 1.36.0 --no-self-update && rustup default 1.36.0
+        run: rustup update 1.38.0 --no-self-update && rustup default 1.38.0
         shell: bash
       - run: cargo build
 
