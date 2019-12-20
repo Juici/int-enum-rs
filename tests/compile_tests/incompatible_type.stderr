@@ -1,0 +1,13 @@
+error[E0600]: cannot apply unary operator `-` to type `u8`
+ --> $DIR/incompatible_type.rs:5:19
+  |
+5 |     NegativeOne = -1,
+  |                   ^^ cannot apply unary operator `-`
+  |
+  = note: unsigned values cannot be negated
+
+error[E0277]: the trait bound `u8: std::ops::Neg` is not satisfied
+ --> $DIR/incompatible_type.rs:5:19
+  |
+5 |     NegativeOne = -1,
+  |                   ^^ the trait `std::ops::Neg` is not implemented for `u8`
