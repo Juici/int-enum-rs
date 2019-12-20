@@ -26,17 +26,17 @@ mod inner {
         let enum_str = enum_.to_string();
         let int_str = int_.to_string();
 
-        let serialize_fn = serialize_fn(&crate_, &core, &serde, &enum_, &int_, &int_str);
-        let deserialize_fn =
-            deserialize_fn(&crate_, &core, &serde, &enum_, &int_, &enum_str, &int_str);
+        let serialize_impl = serialize_impl(&crate_, &core, &serde, &enum_, &int_, &int_str);
+        let deserialize_impl =
+            deserialize_impl(&crate_, &core, &serde, &enum_, &int_, &enum_str, &int_str);
 
         quote! {
-            #serialize_fn
-            #deserialize_fn
+            #serialize_impl
+            #deserialize_impl
         }
     }
 
-    fn serialize_fn(
+    fn serialize_impl(
         crate_: &Ident,
         core: &Path,
         serde: &Path,
@@ -58,7 +58,7 @@ mod inner {
         }
     }
 
-    fn deserialize_fn(
+    fn deserialize_impl(
         crate_: &Ident,
         core: &Path,
         serde: &Path,
@@ -72,7 +72,7 @@ mod inner {
 
         parse_quote! {
             impl<'de> #serde::Deserialize<'de> for #enum_ {
-                fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+                fn deserialize<D>(deserializer: D) -> #core::result::Result<Self, D::Error>
                 where
                     D: #serde::Deserializer<'de>
                 {
