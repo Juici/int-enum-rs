@@ -15,7 +15,15 @@ edition = "2018"
 proc-macro = true
 
 [dependencies]
+cfg-if = "0.1"
 proc-macro-crate = "0.1"
 proc-macro2 = "1.0"
 quote = "1.0"
 syn = { version = "1.0", features = ["full"] }
+
+[features]
+default = [] # default feeatures are applied by parent crate
+std = []
+alloc = []
+serialize = []
+from = []

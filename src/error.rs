@@ -1,14 +1,18 @@
+use cfg_if::cfg_if;
+
 use core::any::type_name;
 use core::fmt::{self, Debug, Display};
 use core::marker::PhantomData;
 
 use crate::IntEnum;
 
-#[cfg(not(feature = "std"))]
-pub trait Error: Debug + Display {}
-
-#[cfg(feature = "std")]
-pub use std::error::Error;
+cfg_if! {
+    if #[cfg(feature = "std")] {
+        pub use std::error::Error;
+    } else {
+        pub trait Error: Debug + Display {}
+    }
+}
 
 /// An error when attempting to convert an integer into an enum.
 #[derive(Clone, Debug, Eq, PartialEq)]

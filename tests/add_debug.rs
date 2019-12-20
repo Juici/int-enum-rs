@@ -1,6 +1,8 @@
+#![no_std]
+
 use core::fmt::Debug;
 
-use int_enum::*;
+use int_enum::int_enum;
 
 #[int_enum(u8)]
 pub enum NoDebug {
