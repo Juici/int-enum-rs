@@ -20,7 +20,7 @@ default = ["std"]
 std = ["int-enum-impl/std"]
 alloc = ["int-enum-impl/alloc"]
 serialize = ["serde", "int-enum-impl/serialize"]
-from = ["int-enum-impl/from"]
+convert = ["int-enum-impl/convert"]
 
 [dev-dependencies]
 int-enum = { path = "./" }

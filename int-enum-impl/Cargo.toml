@@ -26,4 +26,4 @@ default = [] # default feeatures are applied by parent crate
 std = []
 alloc = []
 serialize = []
-from = []
+convert = []
