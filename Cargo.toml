@@ -1,6 +1,6 @@
 [package]
 name = "int-enum"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["James Whaley <juicy66173@gmail.com>"]
 description = "A procedural macro for conversion between integer and enum types."
 license = "MIT"
@@ -31,5 +31,5 @@ serde = "1"
 
 [dependencies]
 cfg-if = "0.1"
-int-enum-impl = { version = "0.2", path = "int-enum-impl" }
+int-enum-impl = { version = "0.3", path = "int-enum-impl" }
 serde = { version = "1", optional = true }

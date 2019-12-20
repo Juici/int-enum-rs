@@ -1,6 +1,6 @@
 [package]
 name = "int-enum-impl"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["James Whaley <juicy66173@gmail.com>"]
 description = "A procedural macro for conversion between integer and enum types."
 license = "MIT"
