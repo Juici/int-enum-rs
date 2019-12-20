@@ -1,0 +1,5 @@
+error: #[int_enum] not supported for this type
+ --> $DIR/invalid_type.rs:3:12
+  |
+3 | #[int_enum(f64)]
+  |            ^^^

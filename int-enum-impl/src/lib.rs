@@ -3,14 +3,16 @@ extern crate proc_macro;
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, Error, Ident, ItemEnum};
+use syn::{
+    parse_macro_input, parse_quote, Attribute, Error, Ident, ItemEnum, Meta, NestedMeta, Result,
+};
 
 struct IntType {
     ty: Ident,
 }
 
 impl Parse for IntType {
-    fn parse(input: ParseStream) -> Result<Self, Error> {
+    fn parse(input: ParseStream) -> Result<Self> {
         let ty: Ident = input.parse()?;
 
         const VALID_TYPES: &[&str] = &[
@@ -35,13 +37,42 @@ impl ToTokens for IntType {
     }
 }
 
+fn add_missing_debug(attrs: &mut Vec<Attribute>) {
+    let mut missing = true;
+    for attr in &attrs[..] {
+        if let Ok(meta) = attr.parse_meta() {
+            if !meta.path().is_ident("derive") {
+                continue;
+            }
+
+            if let Meta::List(types) = meta {
+                let found = types.nested.iter().any(|m| match m {
+                    NestedMeta::Meta(Meta::Path(p)) => p.is_ident("Debug"),
+                    _ => false,
+                });
+                if found {
+                    missing = false;
+                    break;
+                }
+            }
+        }
+    }
+
+    if missing {
+        let attr: Attribute = parse_quote!(#[derive(Debug)]);
+        attrs.push(attr);
+    }
+}
+
 #[proc_macro_attribute]
 pub fn int_enum(
     args: proc_macro::TokenStream,
     input: proc_macro::TokenStream,
 ) -> proc_macro::TokenStream {
     let int_type = parse_macro_input!(args as IntType);
-    let input = parse_macro_input!(input as ItemEnum);
+    let mut input = parse_macro_input!(input as ItemEnum);
+
+    add_missing_debug(&mut input.attrs);
 
     let ItemEnum {
         ident: enum_type,

@@ -13,14 +13,14 @@ pub enum Advanced {
 }
 
 #[test]
-fn advanced_as_int() {
+fn test_as_int() {
     assert_eq!(Advanced::NegativeOne.as_int(), -1);
     assert_eq!(Advanced::Twenty.as_int(), 20);
     assert_eq!(Advanced::NegativeFive.as_int(), -5);
 }
 
 #[test]
-fn advanced_from_int() {
+fn test_from_int() {
     assert_eq!(Advanced::from_int(-1), Ok(Advanced::NegativeOne));
     assert_eq!(Advanced::from_int(20), Ok(Advanced::Twenty));
     assert_eq!(Advanced::from_int(-5), Ok(Advanced::NegativeFive));
