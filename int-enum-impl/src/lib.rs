@@ -1,6 +1,7 @@
 extern crate proc_macro;
 
 mod base;
+mod convert;
 mod serde;
 
 use quote::quote;
@@ -29,10 +30,12 @@ pub fn int_enum(
 
     let base_impl = base::base_impl(&input, &crate_, &core, &enum_, &int_);
     let serde_impls = serde::serde_impls(&crate_, &core, &enum_, &int_);
+    let convert_impls = convert::convert_impls(&crate_, &core, &enum_, &int_);
 
     proc_macro::TokenStream::from(quote! {
         #input
         #base_impl
         #serde_impls
+        #convert_impls
     })
 }
