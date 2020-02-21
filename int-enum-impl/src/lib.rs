@@ -2,40 +2,23 @@ extern crate proc_macro;
 
 mod base;
 mod convert;
-mod serde;
+mod dummy;
+mod parse;
 
 use quote::quote;
-use syn::ItemEnum;
-use syn::{parse_macro_input, parse_quote, Path};
+use syn::parse_macro_input;
 
-#[proc_macro_attribute]
-pub fn int_enum(
-    args: proc_macro::TokenStream,
-    input: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let mut input = parse_macro_input!(input as ItemEnum);
-    base::add_missing_debug(&mut input.attrs);
+use crate::parse::IntEnum;
 
-    let enum_ = input.ident.clone();
-    let int_ = match syn::parse::<base::IntType>(args) {
-        Ok(int_) => int_.ty,
-        Err(err) => {
-            let err = err.to_compile_error();
-            return quote!(#input #err).into();
-        }
-    };
+#[proc_macro_derive(IntEnum)]
+pub fn int_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as IntEnum);
 
-    let crate_ = base::crate_name();
-    let core: Path = parse_quote!(#crate_::__core);
-
-    let base_impl = base::base_impl(&input, &crate_, &core, &enum_, &int_);
-    let serde_impls = serde::serde_impls(&crate_, &core, &enum_, &int_);
-    let convert_impls = convert::convert_impls(&crate_, &core, &enum_, &int_);
+    let int_enum_impl = base::int_enum_impl(&input);
+    let convert_impl = convert::convert_impl(&input);
 
     proc_macro::TokenStream::from(quote! {
-        #input
-        #base_impl
-        #serde_impls
-        #convert_impls
+        #int_enum_impl
+        #convert_impl
     })
 }

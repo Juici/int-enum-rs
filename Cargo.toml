@@ -17,19 +17,20 @@ members = ["int-enum-impl"]
 
 [features]
 default = ["std"]
+
 std = ["int-enum-impl/std"]
-alloc = ["int-enum-impl/alloc"]
-serialize = ["serde", "int-enum-impl/serialize"]
+
+serde = ["int-enum-impl/serde"]
 convert = ["int-enum-impl/convert"]
+
+[dependencies]
+cfg-if = "0.1"
+int-enum-impl = { version = "0.3", path = "int-enum-impl" }
+serde_crate = { package = "serde", version = "1", optional = true }
 
 [dev-dependencies]
 int-enum = { path = "./" }
 rustversion = "1.0"
 trybuild = "1.0"
 serde_json = "1"
-serde = "1"
-
-[dependencies]
-cfg-if = "0.1"
-int-enum-impl = { version = "0.3", path = "int-enum-impl" }
-serde = { version = "1", optional = true }
+serde_crate = { package = "serde", version = "1" }

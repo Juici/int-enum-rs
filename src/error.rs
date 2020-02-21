@@ -10,20 +10,21 @@ cfg_if! {
     if #[cfg(feature = "std")] {
         pub use std::error::Error;
     } else {
+        /// Error trait similar to the one found in the standard library.
         pub trait Error: Debug + Display {}
     }
 }
 
 /// An error when attempting to convert an integer into an enum.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct IntEnumError<Enum: IntEnum> {
-    ty: PhantomData<Enum>,
-    value: Enum::Int,
+#[derive(Copy, Clone, Eq, PartialEq)]
+pub struct IntEnumError<T: IntEnum> {
+    ty: PhantomData<T>,
+    value: T::Int,
 }
 
-impl<Enum: IntEnum> IntEnumError<Enum> {
+impl<T: IntEnum> IntEnumError<T> {
     #[doc(hidden)]
-    pub fn __new(n: Enum::Int) -> Self {
+    pub fn __new(n: T::Int) -> Self {
         Self {
             ty: PhantomData,
             value: n,
@@ -31,20 +32,29 @@ impl<Enum: IntEnum> IntEnumError<Enum> {
     }
 
     /// Returns the value that could not be converted.
-    pub fn value(&self) -> Enum::Int {
+    pub fn value(&self) -> T::Int {
         self.value
     }
 }
 
-impl<Enum: IntEnum> Display for IntEnumError<Enum> {
+impl<T: IntEnum> Display for IntEnumError<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
             "invalid integer value for enum {}: {}",
-            type_name::<Enum>(),
+            type_name::<T>(),
             self.value
         )
     }
 }
 
-impl<Enum: IntEnum> Error for IntEnumError<Enum> {}
+impl<T: IntEnum> Debug for IntEnumError<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut ds = f.debug_struct("IntEnumError");
+        ds.field("ty", &self.ty);
+        ds.field("value", &self.value);
+        ds.finish()
+    }
+}
+
+impl<T: IntEnum> Error for IntEnumError<T> {}

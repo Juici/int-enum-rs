@@ -1,60 +1,54 @@
-cfg_if::cfg_if! {
-    if #[cfg(feature = "convert")] {
-        pub use inner::convert_impls;
-    } else {
-        pub fn convert_impls(
-            _: &syn::Ident,
-            _: &syn::Path,
-            _: &syn::Ident,
-            _: &syn::Ident,
-        ) -> proc_macro2::TokenStream {
-            proc_macro2::TokenStream::new()
+use proc_macro2::TokenStream;
+
+use crate::parse::IntEnum;
+
+pub fn convert_impl(_input: &IntEnum) -> TokenStream {
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "convert")] {
+            inner_impl(_input)
+        } else {
+            TokenStream::new()
         }
     }
 }
 
 #[cfg(feature = "convert")]
-mod inner {
-    use proc_macro2::TokenStream;
+fn inner_impl(input: &IntEnum) -> TokenStream {
     use quote::quote;
-    use syn::parse_quote;
-    use syn::{Ident, ItemImpl, Path};
 
-    pub fn convert_impls(crate_: &Ident, core: &Path, enum_: &Ident, int_: &Ident) -> TokenStream {
-        let from_impls = from_impls(&crate_, &core, &enum_, &int_);
-        let tryfrom_impl = tryfrom_impl(&crate_, &core, &enum_, &int_);
+    use crate::dummy;
 
-        quote! {
-            #from_impls
-            #tryfrom_impl
-        }
-    }
+    let enum_ty = &input.ident;
+    let int_ty = &input.repr;
 
-    fn from_impls(crate_: &Ident, core: &Path, enum_: &Ident, int_: &Ident) -> TokenStream {
-        parse_quote! {
-            impl #core::convert::From<#enum_> for #int_ {
-                fn from(n: #enum_) -> Self {
-                    #crate_::IntEnum::to_int(&n)
-                }
-            }
-
-            impl #core::convert::From<&#enum_> for #int_ {
-                fn from(n: &#enum_) -> Self {
-                    #crate_::IntEnum::to_int(n)
-                }
+    let from_enum = quote! {
+        #[automatically_derived]
+        #[allow(unused_qualifications)]
+        impl _int_enum::export::From<#enum_ty> for #int_ty {
+            #[inline]
+            fn from(n: #enum_ty) -> Self {
+                _int_enum::IntEnum::int_value(n)
             }
         }
-    }
+    };
 
-    fn tryfrom_impl(crate_: &Ident, core: &Path, enum_: &Ident, int_: &Ident) -> ItemImpl {
-        parse_quote! {
-            impl #core::convert::TryFrom<#int_> for #enum_ {
-                type Error = #crate_::IntEnumError<Self>;
+    let try_from_int = quote! {
+        #[automatically_derived]
+        #[allow(unused_qualifications)]
+        impl _int_enum::export::TryFrom<#int_ty> for #enum_ty {
+            type Error = _int_enum::IntEnumError<Self>;
 
-                fn try_from(n: #int_) -> #core::result::Result<Self, Self::Error> {
-                    #crate_::IntEnum::from_int(n)
-                }
+            #[inline]
+            fn try_from(n: #int_ty) -> _int_enum::export::Result<Self, Self::Error> {
+                _int_enum::IntEnum::from_int(n)
             }
         }
-    }
+    };
+
+    let impl_blocks = quote! {
+        #from_enum
+        #try_from_int
+    };
+
+    dummy::wrap_in_const("CONVERT", enum_ty, impl_blocks)
 }
