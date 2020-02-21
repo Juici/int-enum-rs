@@ -2,7 +2,6 @@
 
 #[rustversion::attr(not(nightly), ignore)]
 #[test]
-#[ignore]
 fn compile_tests() {
     let t = trybuild::TestCases::new();
     t.compile_fail("tests/compile_tests/*.rs");

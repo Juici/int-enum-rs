@@ -12,6 +12,11 @@ jobs:
           - ''
           - '--cfg int_enum_test_no_std'
           - '--cfg int_enum_test_repr128'
+        exclude:
+          - rust: stable
+            rustflags: '--cfg int_enum_test_repr128'
+          - rust: beta
+            rustflags: '--cfg int_enum_test_repr128'
     env:
       RUSTFLAGS: ${{ matrix.rustflags }}
     steps:
