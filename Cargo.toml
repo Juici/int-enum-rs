@@ -20,7 +20,7 @@ default = ["std"]
 
 std = ["int-enum-impl/std"]
 
-serde = ["int-enum-impl/serde"]
+serde = ["serde_crate", "int-enum-impl/serde"]
 convert = ["int-enum-impl/convert"]
 
 [dependencies]
