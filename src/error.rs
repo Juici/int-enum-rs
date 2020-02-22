@@ -1,12 +1,12 @@
-use cfg_if::cfg_if;
-
 use core::any::type_name;
+use core::clone::Clone;
+use core::cmp::{Eq, PartialEq};
 use core::fmt::{self, Debug, Display};
-use core::marker::PhantomData;
+use core::marker::{Copy, PhantomData};
 
 use crate::IntEnum;
 
-cfg_if! {
+cfg_if::cfg_if! {
     if #[cfg(feature = "std")] {
         pub use std::error::Error;
     } else {
@@ -41,15 +41,15 @@ impl<T: IntEnum> Display for IntEnumError<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "invalid integer value for enum {}: {}",
+            "unknown variant `{}` for enum {}",
+            self.value,
             type_name::<T>(),
-            self.value
         )
     }
 }
 
 impl<T: IntEnum> Debug for IntEnumError<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut ds = f.debug_struct("IntEnumError");
         ds.field("ty", &self.ty);
         ds.field("value", &self.value);

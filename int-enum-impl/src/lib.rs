@@ -4,6 +4,7 @@ mod base;
 mod convert;
 mod dummy;
 mod parse;
+mod serde;
 
 use quote::quote;
 use syn::parse_macro_input;
@@ -16,9 +17,11 @@ pub fn int_enum_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStrea
 
     let int_enum_impl = base::int_enum_impl(&input);
     let convert_impl = convert::convert_impl(&input);
+    let serde_impl = serde::serde_impl(&input);
 
     proc_macro::TokenStream::from(quote! {
         #int_enum_impl
         #convert_impl
+        #serde_impl
     })
 }

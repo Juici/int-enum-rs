@@ -173,17 +173,12 @@ fn validate_repr(path: &Path) -> Result<Ident> {
         None => return Err(Error::new(path.span(), "invalid int type")),
     };
 
-    #[rustfmt::skip]
-    const VALID_REPRS: [&str; 12] = [
-        "u8", "u16", "u32", "u64", "u128", "usize",
-        "i8", "i16", "i32", "i64", "i128", "isize",
-    ];
-
-    for &repr in &VALID_REPRS {
-        if ident == repr {
-            return Ok(ident.clone());
-        }
+    let s = ident.to_string();
+    match &s[..] {
+        #[rustfmt::skip]
+        "u8" | "u16" | "u32" | "u64" | "u128"
+        | "i8" | "i16" | "i32" | "i64" | "i128"
+        | "usize" | "isize" => Ok(ident.clone()),
+        _ => Err(Error::new(ident.span(), "invalid int type")),
     }
-
-    Err(Error::new(ident.span(), "invalid int type"))
 }

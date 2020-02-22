@@ -1,6 +1,8 @@
 #![cfg(feature = "convert")]
 #![cfg_attr(int_enum_test_no_std, no_std)]
 
+use core::convert::{From, TryFrom};
+
 use int_enum::IntEnum;
 
 #[repr(u8)]

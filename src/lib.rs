@@ -7,6 +7,7 @@
 mod error;
 mod int;
 
+use core::marker::{Copy, Sized};
 use core::result::Result;
 
 use self::int::PrimInt;
@@ -33,6 +34,7 @@ pub use int_enum_impl::IntEnum;
 
 #[doc(hidden)]
 pub mod export {
+    pub use core::fmt;
     pub use core::result::Result;
 
     #[cfg(feature = "convert")]

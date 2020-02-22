@@ -1,7 +1,8 @@
+#![cfg(feature = "serde")]
 #![cfg_attr(int_enum_test_no_std, no_std)]
 #![cfg_attr(int_enum_test_repr128, feature(repr128))]
 
-macro_rules! bounds_tests {
+macro_rules! serde_tests {
     ($( ($ty:tt $min:literal $max:literal) )*) => {$(
         pub mod $ty {
             use int_enum::IntEnum;
@@ -14,28 +15,28 @@ macro_rules! bounds_tests {
             }
 
             #[test]
-            fn test_as_int() {
-                assert_eq!($ty::min_value(), Bounds::Min.int_value());
-                assert_eq!($ty::max_value(), Bounds::Max.int_value());
+            fn test_serialize() {
+                assert_eq!(stringify!($min), serde_json::to_string(&Bounds::Min).unwrap());
+                assert_eq!(stringify!($max), serde_json::to_string(&Bounds::Max).unwrap());
             }
 
             #[test]
-            fn test_from_int() {
-                assert_eq!(Bounds::Min, Bounds::from_int($ty::min_value()).unwrap());
-                assert_eq!(Bounds::Max, Bounds::from_int($ty::max_value()).unwrap());
+            fn test_deserialize() {
+                assert_eq!(Bounds::Min, serde_json::from_str(stringify!($min)).unwrap());
+                assert_eq!(Bounds::Max, serde_json::from_str(stringify!($max)).unwrap());
             }
         }
     )*};
 }
 
-bounds_tests! {
+serde_tests! {
     (u8 0 255)
     (u16 0 65535)
     (u32 0 4294967295)
     (u64 0 18446744073709551615)
 }
 
-bounds_tests! {
+serde_tests! {
     (i8 -128 127)
     (i16 -32768 32767)
     (i32 -2147483648 2147483647)
@@ -43,25 +44,25 @@ bounds_tests! {
 }
 
 #[cfg(int_enum_test_repr128)]
-bounds_tests! {
+serde_tests! {
     (u128 0 340282366920938463463374607431768211455)
     (i128 -170141183460469231731687303715884105728 170141183460469231731687303715884105727)
 }
 
 #[cfg(target_pointer_width = "16")]
-bounds_tests! {
+serde_tests! {
     (usize 0 65535)
     (isize -32768 32767)
 }
 
 #[cfg(target_pointer_width = "32")]
-bounds_tests! {
+serde_tests! {
     (usize 0 4294967295)
     (isize -2147483648 2147483647)
 }
 
 #[cfg(target_pointer_width = "64")]
-bounds_tests! {
+serde_tests! {
     (usize 0 18446744073709551615)
     (isize -9223372036854775808 9223372036854775807)
 }
