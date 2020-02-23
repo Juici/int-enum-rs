@@ -1,0 +1,11 @@
+error: literal out of range for `i8`
+ --> $DIR/underflow.rs:8:17
+  |
+8 |     UnderMin = -129,
+  |                 ^^^
+  |
+note: the lint level is defined here
+ --> $DIR/underflow.rs:1:9
+  |
+1 | #![deny(overflowing_literals)]
+  |         ^^^^^^^^^^^^^^^^^^^^

@@ -45,7 +45,11 @@ impl Parse for IntEnumVariant {
         Ok(IntEnumVariant {
             attrs: Attribute::parse_outer(input)?,
             ident: input.parse()?,
-            eq_token: input.parse()?,
+            eq_token: if input.peek(Token![=]) {
+                input.parse()?
+            } else {
+                return Err(input.error("missing discriminant value"));
+            },
             discriminant: input.parse()?,
         })
     }
@@ -167,24 +171,29 @@ pub struct IntType {
     pub ident: Ident,
 }
 
+macro_rules! invalid_int {
+    ($ty:expr) => {
+        Err(Error::new(
+            $ty.span(),
+            "invalid int type, expected one of:
+    i8, i16, i32, i64, i128, isize,
+    u8, u16, u32, u64, u128, usize",
+        ))
+    };
+}
+
 impl IntType {
     fn parse(ident: &Ident) -> Result<Self> {
         let s = ident.to_string();
 
-        macro_rules! invalid_int {
-            () => {
-                Err(Error::new(ident.span(), "invalid int type"))
-            };
-        }
-
         if s.len() < 2 {
-            return invalid_int!();
+            return invalid_int!(ident);
         }
 
         let style = match &s[0..1] {
             "i" => IntStyle::Signed,
             "u" => IntStyle::Unsigned,
-            _ => return invalid_int!(),
+            _ => return invalid_int!(ident),
         };
         let size = match &s[1..] {
             "8" => IntSize::_8,
@@ -193,7 +202,7 @@ impl IntType {
             "64" => IntSize::_64,
             "128" => IntSize::_128,
             "size" => IntSize::_size,
-            _ => return invalid_int!(),
+            _ => return invalid_int!(ident),
         };
 
         Ok(IntType {
@@ -255,7 +264,7 @@ fn repr_from_attrs(attrs: &[Attribute]) -> Result<IntType> {
 
             let repr = match repr {
                 NestedMeta::Meta(Meta::Path(path)) => path,
-                repr => return Err(Error::new(repr.span(), "invalid int type")),
+                repr => return invalid_int!(repr),
             };
 
             return validate_repr(repr);
@@ -268,7 +277,7 @@ fn repr_from_attrs(attrs: &[Attribute]) -> Result<IntType> {
 fn validate_repr(path: &Path) -> Result<IntType> {
     let ident = match path.get_ident() {
         Some(ident) => ident,
-        None => return Err(Error::new(path.span(), "invalid int type")),
+        None => return invalid_int!(path),
     };
 
     IntType::parse(ident)

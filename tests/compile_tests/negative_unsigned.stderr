@@ -1,0 +1,7 @@
+error[E0600]: cannot apply unary operator `-` to type `u8`
+ --> $DIR/negative_unsigned.rs:6:16
+  |
+6 |     MinusOne = -1,
+  |                ^^ cannot apply unary operator `-`
+  |
+  = note: unsigned values cannot be negated

@@ -1,0 +1,5 @@
+error: only one repr expected
+ --> $DIR/invalid_repr2.rs:3:12
+  |
+3 | #[repr(u8, align(1))]
+  |            ^^^^^^^^
