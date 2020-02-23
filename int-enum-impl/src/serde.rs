@@ -14,14 +14,12 @@ pub fn serde_impl(_input: &IntEnum) -> TokenStream {
 
 #[cfg(feature = "serde")]
 mod inner {
-    use std::cmp::Ordering;
-
     use proc_macro2::{Span, TokenStream};
     use quote::quote;
-    use syn::Ident;
+    use syn::{Attribute, Ident, ItemFn};
 
     use crate::dummy;
-    use crate::parse::IntEnum;
+    use crate::parse::{IntEnum, IntSize, IntStyle, IntType};
 
     pub fn inner_impl(input: &IntEnum) -> TokenStream {
         let enum_ty = &input.ident;
@@ -39,7 +37,7 @@ mod inner {
         }
     }
 
-    fn ser_impl(enum_ty: &Ident, int_ty: &Ident) -> TokenStream {
+    fn ser_impl(enum_ty: &Ident, int_ty: &IntType) -> TokenStream {
         let serialize_fn = serde_fn("serialize", int_ty);
 
         quote! {
@@ -58,11 +56,11 @@ mod inner {
         }
     }
 
-    fn de_impl(enum_ty: &Ident, int_ty: &Ident) -> TokenStream {
+    fn de_impl(enum_ty: &Ident, int_ty: &IntType) -> TokenStream {
         let expecting_str = format!("{} integer", int_ty);
 
         let deserialize_fn = serde_fn("deserialize", int_ty);
-        let visit_fns = visit_fns(int_ty);
+        let visit_fns = visit_fns(int_ty, int_ty.size);
 
         quote! {
             #[automatically_derived]
@@ -84,7 +82,7 @@ mod inner {
                             f.write_str(#expecting_str)
                         }
 
-                        #visit_fns
+                        #(#visit_fns)*
                     }
 
                     #deserialize_fn
@@ -93,20 +91,21 @@ mod inner {
         }
     }
 
-    fn serde_fn(serde: &str, int_ty: &Ident) -> TokenStream {
-        let int_ty_str = int_ty.to_string();
+    // `serialize_{}` or `deserialize_{}` function with respect to ptr size.
+    fn serde_fn(serde: &str, int_ty: &IntType) -> TokenStream {
+        // TODO: Clean up this function.
 
         macro_rules! serde_fn {
-            ($apparent_int_ty:expr) => {{
+            ($actual_int_ty:expr) => {{
                 let fn_ident = Ident::new(
-                    &format!("{}_{}", serde, $apparent_int_ty),
+                    &format!("{}_{}", serde, $actual_int_ty),
                     Span::call_site(),
                 );
 
                 match serde {
                     "serialize" => {
                         let size_ident = Ident::new(
-                            &format!("{}", $apparent_int_ty),
+                            &format!("{}", $actual_int_ty), // Duck-typed, forced into str.
                             Span::call_site(),
                         );
                         quote!( serializer.#fn_ident(n as #size_ident) )
@@ -144,205 +143,139 @@ mod inner {
             (isize) => { size_fns!(@("i")) };
         }
 
-        match &int_ty_str[..] {
-            "usize" => size_fns!(usize),
-            "isize" => size_fns!(isize),
+        match int_ty.size {
+            IntSize::_size => match int_ty.style {
+                IntStyle::Signed => size_fns!(isize),
+                IntStyle::Unsigned => size_fns!(usize),
+            },
             _ => serde_fn!(int_ty),
         }
     }
 
-    fn visit_fns(int_ty: &Ident) -> TokenStream {
-        let int_ty_str = int_ty.to_string();
+    const SIZES: [IntSize; 5] = [
+        IntSize::_8,
+        IntSize::_16,
+        IntSize::_32,
+        IntSize::_64,
+        IntSize::_128,
+    ];
+    const PTR_SIZES: [IntSize; 3] = [IntSize::_16, IntSize::_32, IntSize::_64];
 
-        match &int_ty_str[0..1] {
-            "u" => visit_fns_uint(int_ty, &int_ty_str),
-            "i" => visit_fns_int(int_ty, &int_ty_str),
-            _ => unreachable!(),
+    fn visit_fns(int_ty: &IntType, actual_int_size: IntSize) -> Vec<ItemFn> {
+        if actual_int_size == IntSize::_size {
+            return visit_fns_ptr_size(int_ty);
         }
+
+        // Signed `int_ty` uses both signed and unsigned functions.
+        let mut fns = Vec::with_capacity(match int_ty.style {
+            IntStyle::Signed => SIZES.len() * 2,
+            IntStyle::Unsigned => SIZES.len(),
+        });
+
+        for &visit_size in SIZES.iter() {
+            fns.push(visit_fn(int_ty, actual_int_size, int_ty.style, visit_size));
+
+            // `serde_json` will not give a positive integer to a signed visit fn, even if
+            // it would fit.
+            if int_ty.style == IntStyle::Signed {
+                fns.push(visit_fn(
+                    int_ty,
+                    actual_int_size,
+                    IntStyle::Unsigned,
+                    visit_size,
+                ));
+            }
+        }
+
+        fns
     }
 
-    // TODO: Clean up visit fns.
+    fn visit_fns_ptr_size(int_ty: &IntType) -> Vec<ItemFn> {
+        const ALLOC_LEN: usize = SIZES.len() * PTR_SIZES.len();
 
-    fn visit_fns_uint(int_ty: &Ident, int_ty_str: &str) -> TokenStream {
-        match &int_ty_str[..] {
-            "u8" | "u16" | "u32" | "u64" | "u128" => {
-                let visit_u8 = visit_fn(int_ty, int_ty_str, "u8");
-                let visit_u16 = visit_fn(int_ty, int_ty_str, "u16");
-                let visit_u32 = visit_fn(int_ty, int_ty_str, "u32");
-                let visit_u64 = visit_fn(int_ty, int_ty_str, "u64");
-                let visit_u128 = visit_fn(int_ty, int_ty_str, "u128");
+        // Allocate enough to hold all functions.
+        let mut all_fns = Vec::with_capacity(match int_ty.style {
+            IntStyle::Signed => ALLOC_LEN * 2,
+            IntStyle::Unsigned => ALLOC_LEN,
+        });
 
-                quote! {
-                    #visit_u8
-                    #visit_u16
-                    #visit_u32
-                    #visit_u64
-                    #visit_u128
-                }
+        for &ptr_size in PTR_SIZES.iter() {
+            let mut fns = visit_fns(int_ty, ptr_size);
+
+            // Add `#[cfg(target_pointer_width = "...")]` attributes.
+            let width = ptr_size.to_string();
+            let attr: Attribute = syn::parse_quote!( #[cfg(target_pointer_width = #width)] );
+
+            for f in &mut fns {
+                f.attrs.push(attr.clone());
             }
-            "usize" => {
-                let mut visit_fns = TokenStream::new();
 
-                for size in &["u16", "u32", "u64"] {
-                    let visit_u8 = visit_fn(int_ty, size, "u8");
-                    let visit_u16 = visit_fn(int_ty, size, "u16");
-                    let visit_u32 = visit_fn(int_ty, size, "u32");
-                    let visit_u64 = visit_fn(int_ty, size, "u64");
-                    let visit_u128 = visit_fn(int_ty, size, "u128");
-
-                    let size = &size[1..];
-
-                    visit_fns = quote! {
-                        #visit_fns
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u8
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u16
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u32
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u64
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u128
-                    }
-                }
-
-                visit_fns
-            }
-            _ => unreachable!(),
+            all_fns.append(&mut fns);
         }
+
+        all_fns
     }
 
-    fn visit_fns_int(int_ty: &Ident, int_ty_str: &str) -> TokenStream {
-        match &int_ty_str[..] {
-            "i8" | "i16" | "i32" | "i64" | "i128" => {
-                let visit_i8 = visit_fn(int_ty, int_ty_str, "i8");
-                let visit_i16 = visit_fn(int_ty, int_ty_str, "i16");
-                let visit_i32 = visit_fn(int_ty, int_ty_str, "i32");
-                let visit_i64 = visit_fn(int_ty, int_ty_str, "i64");
-                let visit_i128 = visit_fn(int_ty, int_ty_str, "i128");
+    fn visit_fn(
+        int_ty: &IntType,
+        actual_int_size: IntSize,
+        visit_ty_style: IntStyle,
+        visit_ty_size: IntSize,
+    ) -> ItemFn {
+        let visit_ty = Ident::new(
+            &format!("{}{}", visit_ty_style, visit_ty_size),
+            Span::call_site(),
+        );
 
-                let visit_u8 = visit_fn(int_ty, int_ty_str, "u8");
-                let visit_u16 = visit_fn(int_ty, int_ty_str, "u16");
-                let visit_u32 = visit_fn(int_ty, int_ty_str, "u32");
-                let visit_u64 = visit_fn(int_ty, int_ty_str, "u64");
-                let visit_u128 = visit_fn(int_ty, int_ty_str, "u128");
-
-                quote! {
-                    #visit_i8
-                    #visit_i16
-                    #visit_i32
-                    #visit_i64
-                    #visit_i128
-
-                    #visit_u8
-                    #visit_u16
-                    #visit_u32
-                    #visit_u64
-                    #visit_u128
-                }
-            }
-            "isize" => {
-                let mut visit_fns = TokenStream::new();
-
-                for size in &["i16", "i32", "i64"] {
-                    let visit_i8 = visit_fn(int_ty, size, "i8");
-                    let visit_i16 = visit_fn(int_ty, size, "i16");
-                    let visit_i32 = visit_fn(int_ty, size, "i32");
-                    let visit_i64 = visit_fn(int_ty, size, "i64");
-                    let visit_i128 = visit_fn(int_ty, size, "i128");
-
-                    let visit_u8 = visit_fn(int_ty, size, "u8");
-                    let visit_u16 = visit_fn(int_ty, size, "u16");
-                    let visit_u32 = visit_fn(int_ty, size, "u32");
-                    let visit_u64 = visit_fn(int_ty, size, "u64");
-                    let visit_u128 = visit_fn(int_ty, size, "u128");
-
-                    let size = &size[1..];
-
-                    visit_fns = quote! {
-                        #visit_fns
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_i8
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_i16
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_i32
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_i64
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_i128
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u8
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u16
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u32
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u64
-
-                        #[cfg(target_pointer_width = #size)]
-                        #visit_u128
-                    }
-                }
-
-                visit_fns
-            }
-            _ => unreachable!(),
-        }
-    }
-
-    fn visit_fn(int_ty: &Ident, apparent_int_ty: &str, visit_ty_str: &str) -> TokenStream {
-        let visit_ty = Ident::new(visit_ty_str, Span::call_site());
-
-        let body = if visit_ty_str == apparent_int_ty
-            || (visit_ty_str[0..1] == apparent_int_ty[0..1]
-                && ord_int(visit_ty_str, apparent_int_ty) == Ordering::Less)
-        {
+        let body = if int_ty.style == visit_ty_style && visit_ty_size <= actual_int_size {
             // Visit type can fit inside int type.
+
             quote! {
                 match _int_enum::IntEnum::from_int(v as #int_ty) {
-                    Ok(ret) => Ok(ret),
-                    Err(err) => Err(E::custom(err)),
+                    _int_enum::export::Result::Ok(ret) => _int_enum::export::Result::Ok(ret),
+                    _int_enum::export::Result::Err(err) => _int_enum::export::Result::Err(E::custom(err)),
                 }
             }
         } else {
             // Visit type is larger than int type and may overflow.
-            let apparent_int_ty_ident = Ident::new(apparent_int_ty, Span::call_site());
-            let visit_int_ty = Ident::new(&format!("visit_{}", apparent_int_ty), Span::call_site());
 
-            let min_max = match (&apparent_int_ty[0..1], &visit_ty_str[0..1]) {
-                ("i", "u") => quote! {
-                    const MIN: #visit_ty = 0;
-                    const MAX: #visit_ty = #int_ty::max_value() as #visit_ty;
-                },
-                (_, _) => quote! {
-                    const MIN: #visit_ty = #int_ty::min_value() as #visit_ty;
-                    const MAX: #visit_ty = #int_ty::max_value() as #visit_ty;
-                },
+            let (bounds, cond) = match (int_ty.style, visit_ty_style) {
+                // If visiting unsigned int but fitting a signed int.
+                (IntStyle::Signed, IntStyle::Unsigned) => {
+                    // Here our `MIN` bound is not used in the condition, since an unsigned value
+                    // cannot be negative and thus can't be smaller than the `MIN` bound.
+                    //
+                    // Instead our `MIN` bound is of `int_ty` and is only used in the error message.
+                    let bounds = quote! {
+                        const MIN: #int_ty = #int_ty::min_value();
+                        const MAX: #visit_ty = #int_ty::max_value() as #visit_ty;
+                    };
+                    let cond = quote!(v <= MAX);
+                    (bounds, cond)
+                }
+                _ => {
+                    let bounds = quote! {
+                        const MIN: #visit_ty = #int_ty::min_value() as #visit_ty;
+                        const MAX: #visit_ty = #int_ty::max_value() as #visit_ty;
+                    };
+                    let cond = quote!(MIN <= v && v <= MAX);
+                    (bounds, cond)
+                }
             };
 
-            quote! {
-                #min_max
+            let actual_int_ty = Ident::new(
+                &format!("{}{}", int_ty.style, actual_int_size),
+                Span::call_site(),
+            );
+            let visit_fn = Ident::new(&format!("visit_{}", actual_int_ty), Span::call_site());
 
-                if MIN <= v && v <= MAX {
-                    self.#visit_int_ty(v as #apparent_int_ty_ident)
+            quote! {
+                #bounds
+
+                if #cond {
+                    self.#visit_fn(v as #actual_int_ty)
                 } else {
-                    Err(E::custom(format_args!(
+                    _int_enum::export::Result::Err(E::custom(_int_enum::export::format_args!(
                         "unknown variant `{}`, out of range [{}, {}]",
                         v, MIN, MAX,
                     )))
@@ -350,24 +283,14 @@ mod inner {
             }
         };
 
-        let visit_fn = Ident::new(&format!("visit_{}", visit_ty_str), Span::call_site());
-
-        quote! {
+        let visit_fn = Ident::new(&format!("visit_{}", visit_ty), Span::call_site());
+        syn::parse_quote! {
             fn #visit_fn<E>(self, v: #visit_ty) -> Result<Self::Value, E>
             where
                 E: _int_enum::export::serde::de::Error,
             {
                 #body
             }
-        }
-    }
-
-    // Order int types without parsing.
-    fn ord_int(a: &str, b: &str) -> Ordering {
-        if a.len() == b.len() {
-            a.cmp(b)
-        } else {
-            a.len().cmp(&b.len())
         }
     }
 }

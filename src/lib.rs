@@ -35,10 +35,10 @@ pub use int_enum_impl::IntEnum;
 #[doc(hidden)]
 pub mod export {
     pub use core::fmt;
-    pub use core::result::Result;
+    pub use core::format_args;
 
-    #[cfg(feature = "convert")]
     pub use core::convert::{From, TryFrom};
+    pub use core::result::Result;
 
     #[cfg(feature = "serde")]
     pub use serde_crate as serde;
