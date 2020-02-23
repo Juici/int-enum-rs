@@ -1,5 +1,3 @@
-// TODO: Write new compile tests.
-
 #[rustversion::attr(not(nightly), ignore)]
 #[test]
 fn compile_tests() {
