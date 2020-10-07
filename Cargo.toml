@@ -24,7 +24,7 @@ serde = ["serde_crate", "int-enum-impl/serde"]
 convert = ["int-enum-impl/convert"]
 
 [dependencies]
-cfg-if = "0.1"
+cfg-if = "1.0"
 int-enum-impl = { version = "0.4", path = "int-enum-impl" }
 serde_crate = { package = "serde", version = "1", optional = true }
 
