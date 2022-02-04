@@ -26,5 +26,5 @@ default = [] # default features are applied by parent crate
 
 std = []
 
-serde = []
+serde = ["syn/full"]
 convert = []
