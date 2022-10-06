@@ -1,5 +1,6 @@
 //! A procedural macro for conversion between integer and enum types.
 
+#![allow(clippy::module_name_repetitions)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 mod error;
@@ -112,6 +113,10 @@ pub trait IntEnum: Copy {
     fn int_value(self) -> Self::Int;
 
     /// Attempts to convert an integer into the enum.
+    ///
+    /// # Errors
+    ///
+    /// If `n` is not a variant in the enum.
     fn from_int(n: Self::Int) -> Result<Self, IntEnumError<Self>>
     where
         Self: Sized;

@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions, clippy::single_match_else)]
+
 extern crate proc_macro;
 
 mod ast;

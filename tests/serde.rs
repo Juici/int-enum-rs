@@ -1,3 +1,4 @@
+#![allow(clippy::unreadable_literal)]
 #![cfg(feature = "serde")]
 #![cfg_attr(int_enum_test_repr128, feature(repr128))]
 

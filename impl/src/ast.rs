@@ -71,7 +71,7 @@ const INVALID_REPR: &str = "invalid repr, expected one of:
 
 impl Repr {
     fn from_attrs(node: &DeriveInput) -> Result<Self> {
-        for attr in node.attrs.iter() {
+        for attr in &node.attrs {
             if let Meta::List(meta) = attr.parse_meta()? {
                 // We only care about `#[repr(...)]` attributes.
                 if !meta.path.is_ident("repr") {

@@ -1,4 +1,4 @@
-#![allow(clippy::enum_clike_unportable_variant)]
+#![allow(clippy::enum_clike_unportable_variant, clippy::unreadable_literal)]
 #![cfg(not(feature = "serde"))]
 #![cfg_attr(int_enum_test_repr128, feature(repr128))]
 
@@ -16,14 +16,14 @@ macro_rules! bounds_tests {
 
             #[test]
             fn test_as_int() {
-                assert_eq!($ty::min_value(), Bounds::Min.int_value());
-                assert_eq!($ty::max_value(), Bounds::Max.int_value());
+                assert_eq!($ty::MIN, Bounds::Min.int_value());
+                assert_eq!($ty::MAX, Bounds::Max.int_value());
             }
 
             #[test]
             fn test_from_int() {
-                assert_eq!(Bounds::Min, Bounds::from_int($ty::min_value()).unwrap());
-                assert_eq!(Bounds::Max, Bounds::from_int($ty::max_value()).unwrap());
+                assert_eq!(Bounds::Min, Bounds::from_int($ty::MIN).unwrap());
+                assert_eq!(Bounds::Max, Bounds::from_int($ty::MAX).unwrap());
             }
         }
     )*};
