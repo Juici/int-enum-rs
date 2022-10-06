@@ -1,5 +1,5 @@
+#![allow(clippy::unreadable_literal)]
 #![cfg(feature = "serde")]
-#![cfg_attr(int_enum_test_no_std, no_std)]
 #![cfg_attr(int_enum_test_repr128, feature(repr128))]
 
 macro_rules! serde_tests {
@@ -47,22 +47,4 @@ serde_tests! {
 serde_tests! {
     (u128 0 340282366920938463463374607431768211455)
     (i128 -170141183460469231731687303715884105728 170141183460469231731687303715884105727)
-}
-
-#[cfg(target_pointer_width = "16")]
-serde_tests! {
-    (usize 0 65535)
-    (isize -32768 32767)
-}
-
-#[cfg(target_pointer_width = "32")]
-serde_tests! {
-    (usize 0 4294967295)
-    (isize -2147483648 2147483647)
-}
-
-#[cfg(target_pointer_width = "64")]
-serde_tests! {
-    (usize 0 18446744073709551615)
-    (isize -9223372036854775808 9223372036854775807)
 }

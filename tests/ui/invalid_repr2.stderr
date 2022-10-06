@@ -1,0 +1,5 @@
+error: conflicting reprs
+ --> tests/ui/invalid_repr2.rs:3:8
+  |
+3 | #[repr(u8, align(1))]
+  |        ^^^^^^^^^^^^

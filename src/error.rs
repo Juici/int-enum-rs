@@ -1,34 +1,18 @@
-use core::any::type_name;
-use core::clone::Clone;
-use core::cmp::{Eq, PartialEq};
-use core::fmt::{self, Debug, Display};
-use core::marker::{Copy, PhantomData};
+use core::fmt;
 
 use crate::IntEnum;
 
-cfg_if::cfg_if! {
-    if #[cfg(feature = "std")] {
-        pub use std::error::Error;
-    } else {
-        /// Error trait similar to the one found in the standard library.
-        pub trait Error: Debug + Display {}
-    }
-}
-
-/// An error when attempting to convert an integer into an enum.
-#[derive(Copy, Clone, Eq, PartialEq)]
+/// Error when attempting to convert an integer into an enum.
+#[derive(Clone, Copy, Eq, PartialEq)]
+#[repr(transparent)]
 pub struct IntEnumError<T: IntEnum> {
-    ty: PhantomData<T>,
     value: T::Int,
 }
 
 impl<T: IntEnum> IntEnumError<T> {
     #[doc(hidden)]
     pub fn __new(n: T::Int) -> Self {
-        Self {
-            ty: PhantomData,
-            value: n,
-        }
+        Self { value: n }
     }
 
     /// Returns the value that could not be converted.
@@ -37,24 +21,17 @@ impl<T: IntEnum> IntEnumError<T> {
     }
 }
 
-impl<T: IntEnum> Display for IntEnumError<T> {
+impl<T: IntEnum> fmt::Display for IntEnumError<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "unknown variant `{}` for enum {}",
-            self.value,
-            type_name::<T>(),
-        )
+        write!(f, "unknown variant: {}", self.value)
     }
 }
 
-impl<T: IntEnum> Debug for IntEnumError<T> {
+impl<T: IntEnum> fmt::Debug for IntEnumError<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut ds = f.debug_struct("IntEnumError");
-        ds.field("ty", &self.ty);
-        ds.field("value", &self.value);
-        ds.finish()
+        f.debug_struct("IntEnumError").field("value", &self.value).finish()
     }
 }
 
-impl<T: IntEnum> Error for IntEnumError<T> {}
+#[cfg(feature = "std")]
+impl<T: IntEnum> std::error::Error for IntEnumError<T> {}

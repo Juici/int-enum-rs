@@ -1,8 +1,7 @@
 //! A procedural macro for conversion between integer and enum types.
 
-#![doc(html_root_url = "https://docs.rs/int-enum/*")]
+#![allow(clippy::module_name_repetitions)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(missing_docs)]
 
 mod error;
 mod int;
@@ -30,6 +29,8 @@ use self::int::PrimInt;
 /// }
 ///
 /// # fn main() -> Result<(), Box<dyn Error>> {
+/// # #[cfg(feature = "std")]
+/// # {
 /// assert_eq!(1, SmallInt::One.int_value());
 /// assert_eq!(2, SmallInt::Two.int_value());
 ///
@@ -37,6 +38,7 @@ use self::int::PrimInt;
 /// assert_eq!(SmallInt::Two, SmallInt::from_int(2)?);
 ///
 /// assert!(SmallInt::from_int(5).is_err());
+/// # }
 /// # Ok(())
 /// # }
 /// ```
@@ -111,6 +113,10 @@ pub trait IntEnum: Copy {
     fn int_value(self) -> Self::Int;
 
     /// Attempts to convert an integer into the enum.
+    ///
+    /// # Errors
+    ///
+    /// If `n` is not a variant in the enum.
     fn from_int(n: Self::Int) -> Result<Self, IntEnumError<Self>>
     where
         Self: Sized;
@@ -120,10 +126,11 @@ pub trait IntEnum: Copy {
 pub use self::error::IntEnumError;
 
 #[doc(hidden)]
-pub use int_enum_impl::IntEnum;
+pub use int_enum_impl::*;
 
+// Not public API.
 #[doc(hidden)]
-pub mod export {
+pub mod __private {
     pub use core::fmt;
     pub use core::format_args;
 
@@ -131,5 +138,5 @@ pub mod export {
     pub use core::result::Result;
 
     #[cfg(feature = "serde")]
-    pub use serde_crate as serde;
+    pub use serde;
 }
