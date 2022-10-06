@@ -1,0 +1,5 @@
+error: missing discriminator
+ --> tests/ui/missing_discriminant.rs:7:5
+  |
+7 |     NoDiscriminant,
+  |     ^^^^^^^^^^^^^^

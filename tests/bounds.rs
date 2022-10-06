@@ -1,5 +1,4 @@
-#![cfg_attr(int_enum_test_no_std, no_std)]
-#![cfg_attr(int_enum_test_repr128, feature(repr128))]
+#![allow(clippy::enum_clike_unportable_variant)]
 
 macro_rules! bounds_tests {
     ($( ($ty:tt $min:literal $max:literal) )*) => {$(

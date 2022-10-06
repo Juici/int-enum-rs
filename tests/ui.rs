@@ -1,6 +1,6 @@
 #[rustversion::attr(not(nightly), ignore)]
 #[test]
-fn compile_tests() {
+fn ui() {
     let t = trybuild::TestCases::new();
-    t.compile_fail("tests/compile_tests/*.rs");
+    t.compile_fail("tests/ui/*.rs");
 }

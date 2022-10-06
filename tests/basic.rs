@@ -1,6 +1,3 @@
-#![cfg_attr(int_enum_test_no_std, no_std)]
-#![cfg_attr(int_enum_test_repr128, feature(repr128))]
-
 macro_rules! basic_tests {
     ($($ty:tt)*) => {$(
         pub mod $ty {

@@ -1,35 +1,32 @@
 [package]
 name = "int-enum"
-version = "0.4.0"
-authors = ["James Whaley <juicy66173@gmail.com>"]
-description = "A procedural macro for conversion between integer and enum types."
-license = "MIT"
-readme = "README.md"
+version = "0.5.0"
+authors = ["Juici <juicy66173@gmail.com>"]
+description = "A derive macro for conversion between integer and enum types."
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.60"
 
 documentation = "https://docs.rs/int-enum"
-homepage = "https://github.com/Juici/int-enum-rs"
 repository = "https://github.com/Juici/int-enum-rs"
-
-edition = "2018"
-
-[workspace]
-members = ["int-enum-impl"]
 
 [features]
 default = ["std"]
 
 std = ["int-enum-impl/std"]
 
-serde = ["serde_crate", "int-enum-impl/serde"]
+serde = ["dep:serde", "int-enum-impl/serde"]
 convert = ["int-enum-impl/convert"]
 
 [dependencies]
-cfg-if = "0.1"
-int-enum-impl = { version = "0.4", path = "int-enum-impl" }
-serde_crate = { package = "serde", version = "1", optional = true }
+int-enum-impl = { version = "0.5", path = "impl" }
+
+serde = { version = "1", optional = true }
 
 [dev-dependencies]
-int-enum = { path = "./" }
 rustversion = "1.0"
 serde_json = "1"
 trybuild = "1.0"
+
+[workspace]
+members = ["impl"]

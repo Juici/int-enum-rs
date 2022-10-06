@@ -1,0 +1,8 @@
+error: missing `repr` attribute
+ --> tests/ui/missing_repr.rs:4:1
+  |
+4 | / pub enum MissingRepr {
+5 | |     Zero = 0,
+6 | |     One = 1,
+7 | | }
+  | |_^

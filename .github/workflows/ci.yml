@@ -1,0 +1,47 @@
+name: CI
+on:
+  push:
+  pull_request:
+  schedule: [cron: "0 0 * * 0"]
+
+permissions:
+  contents: read
+
+env:
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  test:
+    name: Rust ${{ matrix.rust }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: [nightly, beta, stable, 1.60.0]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.rust }}
+      - run: cargo test --no-default-features
+      - run: cargo test --all-features
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: clippy, rust-src
+      - run: cargo clippy --tests -- -Dclippy::all -Dclippy::pedantic
+
+  outdated:
+    name: Outdated
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/install@cargo-outdated
+      - run: cargo outdated --workspace --exit-code 1

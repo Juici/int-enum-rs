@@ -1,5 +1,0 @@
-error: generics are not supported for IntEnum
- --> $DIR/generics.rs:7:18
-  |
-7 | pub enum Generics<T> {
-  |                  ^

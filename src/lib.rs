@@ -1,8 +1,6 @@
 //! A procedural macro for conversion between integer and enum types.
 
-#![doc(html_root_url = "https://docs.rs/int-enum/*")]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![deny(missing_docs)]
 
 mod error;
 mod int;
@@ -120,10 +118,11 @@ pub trait IntEnum: Copy {
 pub use self::error::IntEnumError;
 
 #[doc(hidden)]
-pub use int_enum_impl::IntEnum;
+pub use int_enum_impl::*;
 
+// Not public API.
 #[doc(hidden)]
-pub mod export {
+pub mod __private {
     pub use core::fmt;
     pub use core::format_args;
 
@@ -131,5 +130,5 @@ pub mod export {
     pub use core::result::Result;
 
     #[cfg(feature = "serde")]
-    pub use serde_crate as serde;
+    pub use serde;
 }

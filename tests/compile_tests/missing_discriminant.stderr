@@ -1,5 +1,0 @@
-error: missing discriminant value
- --> $DIR/missing_discriminant.rs:7:19
-  |
-7 |     NoDiscriminant,
-  |                   ^

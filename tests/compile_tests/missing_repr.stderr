@@ -1,7 +1,0 @@
-error: no #[repr(...)] found
- --> $DIR/missing_repr.rs:3:23
-  |
-3 | #[derive(Clone, Copy, IntEnum)]
-  |                       ^^^^^^^
-  |
-  = note: this error originates in a derive macro (in Nightly builds, run with -Z macro-backtrace for more info)
