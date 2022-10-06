@@ -28,6 +28,8 @@ use self::int::PrimInt;
 /// }
 ///
 /// # fn main() -> Result<(), Box<dyn Error>> {
+/// # #[cfg(feature = "std")]
+/// # {
 /// assert_eq!(1, SmallInt::One.int_value());
 /// assert_eq!(2, SmallInt::Two.int_value());
 ///
@@ -35,6 +37,7 @@ use self::int::PrimInt;
 /// assert_eq!(SmallInt::Two, SmallInt::from_int(2)?);
 ///
 /// assert!(SmallInt::from_int(5).is_err());
+/// # }
 /// # Ok(())
 /// # }
 /// ```

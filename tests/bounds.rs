@@ -1,4 +1,6 @@
 #![allow(clippy::enum_clike_unportable_variant)]
+#![cfg(not(feature = "serde"))]
+#![cfg_attr(int_enum_test_repr128, feature(repr128))]
 
 macro_rules! bounds_tests {
     ($( ($ty:tt $min:literal $max:literal) )*) => {$(
