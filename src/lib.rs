@@ -43,7 +43,7 @@ use self::int::PrimInt;
 /// # }
 /// ```
 ///
-/// Serde support (requires feature `serialize`):
+/// Serde support (requires feature `serde`):
 ///
 /// ```
 /// # use std::error::Error;
