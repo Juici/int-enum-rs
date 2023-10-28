@@ -2,17 +2,17 @@
 
 [<img alt="crates.io" src="https://img.shields.io/crates/v/int-enum?style=for-the-badge&logo=rust" height="20">](https://crates.io/crates/int-enum)
 [<img alt="docs.rs" src="https://img.shields.io/badge/docs.rs-int--enum-4d76ae?style=for-the-badge&logo=docs.rs" height="20">](https://docs.rs/int-enum)
-[<img alt="build status" src="https://img.shields.io/github/workflow/status/Juici/int-enum-rs/CI/master?style=for-the-badge" height="20">](https://github.com/Juici/int-enum-rs/actions?query=branch%3Amaster)
+[<img alt="build status" src="https://img.shields.io/github/actions/workflow/status/Juici/int-enum-rs/ci.yml?branch=master&style=for-the-badge" height="20">](https://github.com/Juici/int-enum-rs/actions?query=branch%3Amaster)
 
 This crate provides a derive macro to generate code for conversion between
 integer and enum types.
 
 ```toml
 [dependencies]
-int-enum = "0.5"
+int-enum = "1"
 ```
 
-*Compiler support: requires rustc 1.60+*
+_Compiler support: requires rustc 1.60+_
 
 ## License
 
