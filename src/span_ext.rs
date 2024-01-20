@@ -1,5 +1,3 @@
-use std::panic;
-
 use proc_macro2::Span;
 
 pub trait SpanExt {
@@ -10,11 +8,11 @@ pub trait SpanExt {
 #[cfg(proc_macro_span)]
 impl SpanExt for Span {
     fn start(&self) -> Span {
-        panic::catch_unwind(|| Span::from(self.unwrap().start())).unwrap_or(*self)
+        std::panic::catch_unwind(|| Span::from(self.unwrap().start())).unwrap_or(*self)
     }
 
     fn end(&self) -> Span {
-        panic::catch_unwind(|| Span::from(self.unwrap().end())).unwrap_or(*self)
+        std::panic::catch_unwind(|| Span::from(self.unwrap().end())).unwrap_or(*self)
     }
 }
 
