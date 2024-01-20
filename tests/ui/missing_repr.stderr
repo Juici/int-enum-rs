@@ -1,8 +1,7 @@
 error: missing `repr` attribute
- --> tests/ui/missing_repr.rs:4:1
+ --> tests/ui/missing_repr.rs:3:23
   |
-4 | / pub enum MissingRepr {
-5 | |     Zero = 0,
-6 | |     One = 1,
-7 | | }
-  | |_^
+3 | #[derive(Clone, Copy, IntEnum)]
+  |                       ^^^^^^^
+  |
+  = note: this error originates in the derive macro `IntEnum` (in Nightly builds, run with -Z macro-backtrace for more info)
