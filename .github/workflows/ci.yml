@@ -1,9 +1,15 @@
+# Adapted from dtolnay's standard CI workflow.
+#
+# https://github.com/dtolnay/.github/blob/5504d080658ec209069bcd9e3957821a06128815/.github/workflows/pre_ci.yml
+# https://github.com/dtolnay/thiserror/blob/77d0af46ddafa9b70d99267548bdea85308e90f3/.github/workflows/ci.yml
+
 name: CI
+
 on:
   push:
   pull_request:
   workflow_dispatch:
-  schedule: [cron: "0 0 * * 0"]
+  schedule: [cron: "40 1 * * *"]
 
 permissions:
   contents: read
@@ -12,27 +18,115 @@ env:
   RUSTFLAGS: -Dwarnings
 
 jobs:
+  pre_ci:
+    runs-on: ubuntu-latest
+    outputs:
+      continue: ${{steps.decision.outputs.continue}}
+
+    steps:
+      - id: is_local_pull_request
+        run: echo value=true >> $GITHUB_OUTPUT
+        if: github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name
+
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 2
+        if: steps.is_local_pull_request.outputs.value
+
+      - id: is_noop_merge
+        run: if git diff HEAD^2 --quiet; then echo value=true >> $GITHUB_OUTPUT; fi
+        if: steps.is_local_pull_request.outputs.value
+
+      - id: decision
+        run: echo continue=true >> $GITHUB_OUTPUT
+        if: |
+          !steps.is_local_pull_request.outputs.value || !steps.is_noop_merge.outputs.value
+
   test:
-    name: Rust ${{ matrix.rust }}
+    name: Rust ${{matrix.rust}}
+    needs: pre_ci
+    if: needs.pre_ci.outputs.continue
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        rust: [nightly, beta, stable, 1.60.0]
+        rust: [nightly, beta, stable, 1.64.0]
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust }}
+          toolchain: ${{matrix.rust}}
+          components: rust-src
+      - name: Enable type layout randomization
+        run: echo RUSTFLAGS=${RUSTFLAGS}\ -Zrandomize-layout >> $GITHUB_ENV
+        if: matrix.rust == 'nightly'
+      - name: Enable nightly-only tests
+        run: echo RUSTFLAGS=${RUSTFLAGS}\ --cfg=intenum_nightly_testing >> $GITHUB_ENV
+        if: matrix.rust == 'nightly'
       - run: cargo test --workspace
+
+  minimal:
+    name: Minimal versions
+    needs: pre_ci
+    if: needs.pre_ci.outputs.continue
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo generate-lockfile -Z minimal-versions
+      - run: cargo check --locked
+
+  doc:
+    name: Documentation
+    needs: pre_ci
+    if: needs.pre_ci.outputs.continue
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RUSTDOCFLAGS: -Dwarnings
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - uses: dtolnay/install@cargo-docs-rs
+      - run: cargo docs-rs
 
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
         with:
           components: clippy, rust-src
       - run: cargo clippy --tests --workspace -- -Dclippy::all -Dclippy::pedantic
+
+  miri:
+    name: Miri
+    needs: pre_ci
+    if: needs.pre_ci.outputs.continue
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@miri
+      - run: cargo miri setup
+      - run: cargo miri test
+        env:
+          MIRIFLAGS: -Zmiri-strict-provenance
+
+  outdated:
+    name: Outdated
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/install@cargo-outdated
+      - run: cargo outdated --workspace --exit-code 1

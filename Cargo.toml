@@ -5,7 +5,7 @@ authors = ["Juici <juicy66173@gmail.com>"]
 description = "A derive macro for conversion between integer and enum types."
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.60"
+rust-version = "1.64"
 
 documentation = "https://docs.rs/int-enum"
 repository = "https://github.com/Juici/int-enum-rs"
@@ -14,14 +14,14 @@ repository = "https://github.com/Juici/int-enum-rs"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1"
-proc-macro2-diagnostics = "0.10"
-quote = "1"
-syn = "2"
+proc-macro2 = "1.0.76"
+proc-macro2-diagnostics = "0.10.1"
+quote = "1.0.35"
+syn = "2.0.48"
 
 [dev-dependencies]
-rustversion = "1"
-trybuild = "1"
+rustversion = "1.0.14"
+trybuild = "1.0.89"
 
 [build-dependencies]
-version_check = "0.9"
+version_check = "0.9.4"

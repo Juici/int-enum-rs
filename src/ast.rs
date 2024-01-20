@@ -7,7 +7,7 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{Attribute, DataEnum, Expr, Fields, Meta, Token};
 
-use crate::ext::SpanExt;
+use crate::span_ext::SpanExt;
 use crate::Result;
 
 pub struct Repr {
@@ -58,7 +58,7 @@ pub fn get_repr(attrs: &[Attribute]) -> Result<Repr> {
         Some(span) => span
             .resolved_at(Span::call_site())
             .error("missing type in `repr` attribute")
-            .note(format!("valid reprs are {}", ValidReprs)),
+            .note(format!("valid reprs are {ValidReprs}")),
         None => Span::call_site().error("missing `repr` attribute"),
     })
 }
