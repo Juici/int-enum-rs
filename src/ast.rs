@@ -1,7 +1,7 @@
 use std::fmt;
 
 use proc_macro2::{Ident, Span, TokenStream};
-use proc_macro2_diagnostics::{Diagnostic, SpanDiagnosticExt};
+use proc_macro2_diagnostics::SpanDiagnosticExt;
 use quote::ToTokens;
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
@@ -90,40 +90,36 @@ pub struct Variant {
 }
 
 pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> {
-    fn add_variant_diagnostics(mut diag: Diagnostic, v: syn::Variant) -> Diagnostic {
+    let mut variants = Vec::with_capacity(data.variants.len());
+    let mut iter = data.variants.into_iter();
+
+    let err_iter = loop {
+        let v = match iter.next() {
+            Some(next) => next,
+            None => return Ok(variants),
+        };
+
+        let discriminant = match v.discriminant {
+            Some((_, discriminant)) if matches!(v.fields, Fields::Unit) => discriminant,
+            _ => break std::iter::once(v).chain(iter),
+        };
+
+        variants.push(Variant { ident: v.ident, discriminant });
+    };
+
+    let mut diag = enum_ident
+        .span()
+        .resolved_at(Span::call_site())
+        .error("enum has variants that are not supported by this trait");
+
+    for v in err_iter {
         if !matches!(&v.fields, Fields::Unit) {
             diag = diag.span_error(v.fields.span(), "only unit variants are supported");
         }
         if v.discriminant.is_none() {
             diag = diag.span_error(v.span().end(), "missing discriminant");
         }
-        diag
     }
 
-    let mut variants = Vec::with_capacity(data.variants.len());
-    let mut iter = data.variants.into_iter();
-
-    while let Some(v) = iter.next() {
-        if matches!(&v.fields, Fields::Unit) {
-            if let Some((_, discriminant)) = v.discriminant {
-                variants.push(Variant { ident: v.ident, discriminant });
-                continue;
-            }
-        }
-
-        let mut diag = enum_ident
-            .span()
-            .resolved_at(Span::call_site())
-            .error("enum has variants that are not supported by this trait");
-
-        diag = add_variant_diagnostics(diag, v);
-
-        for v in iter {
-            diag = add_variant_diagnostics(diag, v);
-        }
-
-        return Err(diag);
-    }
-
-    Ok(variants)
+    Err(diag)
 }

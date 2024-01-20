@@ -34,15 +34,15 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
 
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
-    let from_enum_args = variants.iter().map(|Variant { ident, discriminant }| {
+    let from_enum_args = variants.iter().map(|Variant { ident, discriminant, .. }| {
         quote! {
-            #enum_ident::#ident => { #discriminant }
+            #enum_ident::#ident => #discriminant,
         }
     });
 
-    let try_from_int_args = variants.iter().map(|Variant { ident, discriminant }| {
+    let try_from_int_args = variants.iter().map(|Variant { discriminant, ident, .. }| {
         quote! {
-            #discriminant => { ::core::result::Result::Ok(#enum_ident::#ident) }
+            v if v == (#discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
         }
     });
 
@@ -50,8 +50,8 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
         #[automatically_derived]
         impl #impl_generics ::core::convert::From<#enum_ident #type_generics> for #repr #where_clause {
             #[inline]
-            fn from(value: #enum_ident #type_generics) -> Self {
-                match value {
+            fn from(v: #enum_ident #type_generics) -> Self {
+                match v {
                     #(#from_enum_args)*
                 }
             }
@@ -64,10 +64,10 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
             type Error = #repr;
 
             #[inline]
-            fn try_from(value: #repr) -> ::core::result::Result<Self, Self::Error> {
-                match value {
+            fn try_from(v: #repr) -> ::core::result::Result<Self, Self::Error> {
+                match v {
                     #(#try_from_int_args)*
-                    value => { ::core::result::Result::Err(value) }
+                    v => ::core::result::Result::Err(v),
                 }
             }
         }
