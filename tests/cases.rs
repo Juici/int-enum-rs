@@ -3,7 +3,7 @@ use int_enum::IntEnum;
 #[test]
 fn basic() {
     #[repr(u8)]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, IntEnum)]
+    #[derive(Debug, PartialEq, IntEnum)]
     pub enum Basic {
         Zero = 0,
         One = 1,
@@ -23,7 +23,7 @@ fn basic() {
 #[test]
 fn signed() {
     #[repr(i8)]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, IntEnum)]
+    #[derive(Debug, PartialEq, IntEnum)]
     pub enum Signed {
         MinusOne = -1,
         One = 1,
@@ -40,7 +40,7 @@ fn signed() {
 #[test]
 fn with_align() {
     #[repr(u16, align(4))]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, IntEnum)]
+    #[derive(Debug, PartialEq, IntEnum)]
     pub enum WithAlign {
         A = 0x41,
         B = 0x42,
@@ -57,7 +57,7 @@ fn with_align() {
 #[test]
 fn discriminant_expr() {
     #[repr(u16)]
-    #[derive(Clone, Copy, Debug, Eq, PartialEq, IntEnum)]
+    #[derive(Debug, PartialEq, IntEnum)]
     pub enum Expr {
         Up = 1 << 0,
         Down = 1 << 1,
