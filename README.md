@@ -12,7 +12,7 @@ integer and enum types.
 int-enum = "1"
 ```
 
-_Compiler support: requires rustc 1.63+_
+_Compiler support: requires rustc 1.64+_
 
 ## License
 
