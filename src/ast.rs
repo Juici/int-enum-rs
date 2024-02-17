@@ -113,10 +113,10 @@ pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> 
 
     for v in err_iter {
         if !matches!(&v.fields, Fields::Unit) {
-            diag = diag.span_error(v.fields.span(), "only unit variants are supported");
+            diag = diag.span_warning(v.fields.span(), "only unit variants are supported");
         }
         if v.discriminant.is_none() {
-            diag = diag.span_error(crate::span::end(v.span()), "missing discriminant");
+            diag = diag.span_warning(crate::span::end(v.span()), "missing discriminant");
         }
     }
 
