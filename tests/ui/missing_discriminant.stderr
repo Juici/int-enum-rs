@@ -6,7 +6,7 @@ error: enum has variants that are not supported by this trait
 5 | pub enum MissingDiscriminant {
   |          ^^^^^^^^^^^^^^^^^^^
   |
-error: missing discriminant
+warning: missing discriminant
  --> tests/ui/missing_discriminant.rs:7:19
   |
 7 |     NoDiscriminant,
