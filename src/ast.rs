@@ -7,7 +7,6 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{Attribute, DataEnum, Expr, Fields, Meta, Token};
 
-use crate::span_ext::SpanExt;
 use crate::Result;
 
 pub struct Repr {
@@ -117,7 +116,7 @@ pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> 
             diag = diag.span_error(v.fields.span(), "only unit variants are supported");
         }
         if v.discriminant.is_none() {
-            diag = diag.span_error(v.span().end(), "missing discriminant");
+            diag = diag.span_error(crate::span::end(v.span()), "missing discriminant");
         }
     }
 
