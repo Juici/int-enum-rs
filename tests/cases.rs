@@ -2,9 +2,9 @@ use int_enum::IntEnum;
 
 #[test]
 fn basic() {
-    #[repr(u8)]
     #[derive(Debug, PartialEq, IntEnum)]
-    pub enum Basic {
+    #[repr(u8)]
+    enum Basic {
         Zero = 0,
         One = 1,
         Two = 2,
@@ -22,9 +22,9 @@ fn basic() {
 
 #[test]
 fn signed() {
-    #[repr(i8)]
     #[derive(Debug, PartialEq, IntEnum)]
-    pub enum Signed {
+    #[repr(i8)]
+    enum Signed {
         MinusOne = -1,
         One = 1,
     }
@@ -39,9 +39,9 @@ fn signed() {
 
 #[test]
 fn with_align() {
-    #[repr(u16, align(4))]
     #[derive(Debug, PartialEq, IntEnum)]
-    pub enum WithAlign {
+    #[repr(u16, align(4))]
+    enum WithAlign {
         A = 0x41,
         B = 0x42,
     }
@@ -56,9 +56,9 @@ fn with_align() {
 
 #[test]
 fn discriminant_expr() {
-    #[repr(u16)]
     #[derive(Debug, PartialEq, IntEnum)]
-    pub enum Expr {
+    #[repr(u16)]
+    enum Expr {
         Up = 1 << 0,
         Down = 1 << 1,
         Left = 1 << 2,

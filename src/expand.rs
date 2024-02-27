@@ -74,7 +74,10 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
     };
 
     Ok(quote! {
-        #from_enum_impl
-        #try_from_int_impl
+        #[allow(unknown_lints, non_local_definitions)] // False positive: https://github.com/rust-lang/rust/issues/121621
+        const _: () = {
+            #from_enum_impl
+            #try_from_int_impl
+        };
     })
 }

@@ -1,8 +1,9 @@
 error: enum has variants that are not supported by this trait
  --> tests/ui/missing_discriminant.rs:5:10
   |
-4 | #[derive(Clone, Copy, IntEnum)]
+3 | #[derive(Clone, Copy, IntEnum)]
   |                       ------- in this derive macro expansion
+4 | #[repr(u8)]
 5 | pub enum MissingDiscriminant {
   |          ^^^^^^^^^^^^^^^^^^^
   |
