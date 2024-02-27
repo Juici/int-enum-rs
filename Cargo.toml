@@ -14,10 +14,10 @@ repository = "https://github.com/Juici/int-enum-rs"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.76"
+proc-macro2 = "1.0.78"
 proc-macro2-diagnostics = "0.10.1"
 quote = "1.0.35"
-syn = "2.0.48"
+syn = "2.0.51"
 
 [dev-dependencies]
 rustversion = "1.0.14"
