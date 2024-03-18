@@ -13,10 +13,10 @@ and [`TryFrom`] traits for converting between integer and enum types.
 
 ```toml
 [dependencies]
-int-enum = "1.0"
+int-enum = "1.1"
 ```
 
-_Compiler support: requires rustc 1.64+_
+_Compiler support: requires rustc 1.70+_
 
 ## Example
 
