@@ -33,14 +33,8 @@ pub fn get_repr(attrs: &[Attribute]) -> Result<Repr> {
         let nested = attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?;
 
         for meta in nested {
-            let path = match meta {
-                Meta::Path(path) => path,
-                _ => continue,
-            };
-            let ident = match path.get_ident() {
-                Some(ident) => ident,
-                None => continue,
-            };
+            let Meta::Path(path) = meta else { continue };
+            let Some(ident) = path.get_ident() else { continue };
 
             let sym = ident.to_string();
             let sym = sym.strip_prefix("r#").unwrap_or(sym.as_ref());
@@ -93,10 +87,7 @@ pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> 
     let mut iter = data.variants.into_iter();
 
     let err_iter = loop {
-        let v = match iter.next() {
-            Some(next) => next,
-            None => return Ok(variants),
-        };
+        let Some(v) = iter.next() else { return Ok(variants) };
 
         let discriminant = match v.discriminant {
             Some((_, discriminant)) if matches!(v.fields, Fields::Unit) => discriminant,

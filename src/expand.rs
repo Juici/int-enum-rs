@@ -64,7 +64,7 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
             type Error = #repr;
 
             #[inline]
-            fn try_from(v: #repr) -> ::core::result::Result<Self, Self::Error> {
+            fn try_from(v: #repr) -> ::core::result::Result<Self, #repr> {
                 match v {
                     #(#try_from_int_args)*
                     v => ::core::result::Result::Err(v),
