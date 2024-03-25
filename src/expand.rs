@@ -1,24 +1,23 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro2_diagnostics::SpanDiagnosticExt;
 use quote::quote;
-use syn::{Attribute, Data, DataEnum, DeriveInput, Generics, Visibility};
+use syn::{Attribute, Data, DataEnum, DeriveInput, Generics};
 
 use crate::ast::Variant;
 use crate::{ast, Result};
 
 pub struct EnumInput {
     pub attrs: Vec<Attribute>,
-    pub vis: Visibility,
     pub ident: Ident,
     pub generics: Generics,
     pub data: DataEnum,
 }
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
-    let DeriveInput { attrs, vis, ident, generics, data } = input;
+    let DeriveInput { attrs, ident, generics, data, .. } = input;
 
     let error = match data {
-        Data::Enum(data) => return derive_enum(EnumInput { attrs, vis, ident, generics, data }),
+        Data::Enum(data) => return derive_enum(EnumInput { attrs, ident, generics, data }),
         Data::Struct(_) => "this trait cannot be derived for structs",
         Data::Union(_) => "this trait cannot be derived for unions",
     };
