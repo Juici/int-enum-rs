@@ -1,7 +1,7 @@
 use proc_macro2::{Ident, Span, TokenStream};
 use proc_macro2_diagnostics::SpanDiagnosticExt;
 use quote::quote;
-use syn::{Attribute, Data, DataEnum, DeriveInput, Generics};
+use syn::{Attribute, Data, DataEnum, DeriveInput, Expr, Generics};
 
 use crate::ast::Variant;
 use crate::{ast, Result};
@@ -33,15 +33,43 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
 
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
+    let mut last_discriminant: Option<Expr> = None;
+
     let from_enum_args = variants.iter().map(|Variant { ident, discriminant, .. }| {
+        let current_discriminant = match discriminant {
+            Some(d) => d.clone(),
+            None => {
+                let next_value = match last_discriminant {
+                    Some(ref last) => quote! { (#last + 1) },
+                    None => quote! { 0 },
+                };
+                syn::Expr::Verbatim(next_value)
+            }
+        };
+        last_discriminant = Some(current_discriminant.clone());
+
         quote! {
-            #enum_ident::#ident => #discriminant,
+            #enum_ident::#ident => #current_discriminant,
         }
     });
 
-    let try_from_int_args = variants.iter().map(|Variant { discriminant, ident, .. }| {
+    let mut last_discriminant: Option<Expr> = None;
+
+    let try_from_int_args = variants.iter().map(|Variant { ident, discriminant, .. }| {
+        let current_discriminant = match discriminant {
+            Some(d) => d.clone(),
+            None => {
+                let next_value = match last_discriminant {
+                    Some(ref last) => quote! { (#last + 1) },
+                    None => quote! { 0 },
+                };
+                syn::Expr::Verbatim(next_value)
+            }
+        };
+        last_discriminant = Some(current_discriminant.clone());
+
         quote! {
-            v if v == (#discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
+            v if v == (#current_discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
         }
     });
 
