@@ -79,7 +79,7 @@ impl fmt::Display for ValidReprs {
 
 pub struct Variant {
     pub ident: Ident,
-    pub discriminant: Expr,
+    pub discriminant: Option<Expr>,
 }
 
 pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> {
@@ -90,7 +90,8 @@ pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> 
         let Some(v) = iter.next() else { return Ok(variants) };
 
         let discriminant = match v.discriminant {
-            Some((_, discriminant)) if matches!(v.fields, Fields::Unit) => discriminant,
+            Some((_, discriminant)) if matches!(v.fields, Fields::Unit) => Some(discriminant),
+            None => None,
             _ => break std::iter::once(v).chain(iter),
         };
 

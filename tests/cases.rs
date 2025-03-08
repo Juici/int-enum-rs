@@ -76,3 +76,55 @@ fn discriminant_expr() {
     assert_eq!(Expr::try_from(1 << 3), Ok(Expr::Right));
     assert_eq!(Expr::try_from(1 << 4), Err(1 << 4));
 }
+
+#[test]
+fn no_discriminant() {
+    // Ensuring conformity with the documented behavior of implicit discriminators
+    // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.implicit
+    #[derive(Debug, PartialEq, IntEnum)]
+    #[repr(i16)]
+    enum Signed {
+        Zero,
+        MinusOne = -1,
+        One = 1,
+        Two,
+        MinusFive = -5,
+        MinusFour,
+    }
+
+    assert_eq!(i16::from(Signed::Zero), 0);
+    assert_eq!(i16::from(Signed::MinusOne), -1);
+    assert_eq!(i16::from(Signed::One), 1);
+    assert_eq!(i16::from(Signed::Two), 2);
+    assert_eq!(i16::from(Signed::MinusFive), -5);
+    assert_eq!(i16::from(Signed::MinusFour), -4);
+
+    assert_eq!(Signed::try_from(0), Ok(Signed::Zero));
+    assert_eq!(Signed::try_from(-1), Ok(Signed::MinusOne));
+    assert_eq!(Signed::try_from(1), Ok(Signed::One));
+    assert_eq!(Signed::try_from(2), Ok(Signed::Two));
+    assert_eq!(Signed::try_from(-5), Ok(Signed::MinusFive));
+    assert_eq!(Signed::try_from(-4), Ok(Signed::MinusFour));
+    assert_eq!(Signed::try_from(-3), Err(-3));
+    assert_eq!(Signed::try_from(3), Err(3));
+
+    #[derive(Debug, PartialEq, IntEnum)]
+    #[repr(u8)]
+    enum Unsigned {
+        One = 1,
+        Two,
+        Four = 4,
+        Five,
+    }
+
+    assert_eq!(u8::from(Unsigned::One), 1);
+    assert_eq!(u8::from(Unsigned::Two), 2);
+    assert_eq!(u8::from(Unsigned::Four), 4);
+    assert_eq!(u8::from(Unsigned::Five), 5);
+
+    assert_eq!(Unsigned::try_from(1), Ok(Unsigned::One));
+    assert_eq!(Unsigned::try_from(2), Ok(Unsigned::Two));
+    assert_eq!(Unsigned::try_from(4), Ok(Unsigned::Four));
+    assert_eq!(Unsigned::try_from(5), Ok(Unsigned::Five));
+    assert_eq!(Unsigned::try_from(3), Err(3));
+}
