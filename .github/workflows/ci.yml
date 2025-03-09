@@ -1,7 +1,7 @@
 # Adapted from dtolnay's standard CI workflow.
 #
 # https://github.com/dtolnay/.github/blob/5504d080658ec209069bcd9e3957821a06128815/.github/workflows/pre_ci.yml
-# https://github.com/dtolnay/thiserror/blob/77d0af46ddafa9b70d99267548bdea85308e90f3/.github/workflows/ci.yml
+# https://github.com/dtolnay/thiserror/blob/95a512669395f30cf9ae10343149726c0563ed76/.github/workflows/ci.yml
 
 name: CI
 
@@ -66,6 +66,12 @@ jobs:
         run: echo RUSTFLAGS=${RUSTFLAGS}\ --cfg=intenum_nightly_testing >> $GITHUB_ENV
         if: matrix.rust == 'nightly'
       - run: cargo test --workspace
+      - uses: actions/upload-artifact@v4
+        if: matrix.rust == 'nightly' && always()
+        with:
+          name: Cargo.lock
+          path: Cargo.lock
+        continue-on-error: true
 
   minimal:
     name: Minimal versions
@@ -128,5 +134,6 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
       - uses: dtolnay/install@cargo-outdated
       - run: cargo outdated --workspace --exit-code 1
