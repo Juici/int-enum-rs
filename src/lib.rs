@@ -4,7 +4,6 @@ extern crate proc_macro;
 
 mod ast;
 mod expand;
-mod span;
 
 use proc_macro::TokenStream;
 use proc_macro2_diagnostics::Diagnostic;

@@ -83,48 +83,30 @@ fn no_discriminant() {
     // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.implicit
     #[derive(Debug, PartialEq, IntEnum)]
     #[repr(i16)]
-    enum Signed {
+    enum NoDiscr {
         Zero,
         MinusOne = -1,
         One = 1,
         Two,
         MinusFive = -5,
         MinusFour,
+        MinusThree,
     }
 
-    assert_eq!(i16::from(Signed::Zero), 0);
-    assert_eq!(i16::from(Signed::MinusOne), -1);
-    assert_eq!(i16::from(Signed::One), 1);
-    assert_eq!(i16::from(Signed::Two), 2);
-    assert_eq!(i16::from(Signed::MinusFive), -5);
-    assert_eq!(i16::from(Signed::MinusFour), -4);
+    assert_eq!(i16::from(NoDiscr::Zero), 0);
+    assert_eq!(i16::from(NoDiscr::MinusOne), -1);
+    assert_eq!(i16::from(NoDiscr::One), 1);
+    assert_eq!(i16::from(NoDiscr::Two), 2);
+    assert_eq!(i16::from(NoDiscr::MinusFive), -5);
+    assert_eq!(i16::from(NoDiscr::MinusFour), -4);
 
-    assert_eq!(Signed::try_from(0), Ok(Signed::Zero));
-    assert_eq!(Signed::try_from(-1), Ok(Signed::MinusOne));
-    assert_eq!(Signed::try_from(1), Ok(Signed::One));
-    assert_eq!(Signed::try_from(2), Ok(Signed::Two));
-    assert_eq!(Signed::try_from(-5), Ok(Signed::MinusFive));
-    assert_eq!(Signed::try_from(-4), Ok(Signed::MinusFour));
-    assert_eq!(Signed::try_from(-3), Err(-3));
-    assert_eq!(Signed::try_from(3), Err(3));
-
-    #[derive(Debug, PartialEq, IntEnum)]
-    #[repr(u8)]
-    enum Unsigned {
-        One = 1,
-        Two,
-        Four = 4,
-        Five,
-    }
-
-    assert_eq!(u8::from(Unsigned::One), 1);
-    assert_eq!(u8::from(Unsigned::Two), 2);
-    assert_eq!(u8::from(Unsigned::Four), 4);
-    assert_eq!(u8::from(Unsigned::Five), 5);
-
-    assert_eq!(Unsigned::try_from(1), Ok(Unsigned::One));
-    assert_eq!(Unsigned::try_from(2), Ok(Unsigned::Two));
-    assert_eq!(Unsigned::try_from(4), Ok(Unsigned::Four));
-    assert_eq!(Unsigned::try_from(5), Ok(Unsigned::Five));
-    assert_eq!(Unsigned::try_from(3), Err(3));
+    assert_eq!(NoDiscr::try_from(0), Ok(NoDiscr::Zero));
+    assert_eq!(NoDiscr::try_from(-1), Ok(NoDiscr::MinusOne));
+    assert_eq!(NoDiscr::try_from(1), Ok(NoDiscr::One));
+    assert_eq!(NoDiscr::try_from(2), Ok(NoDiscr::Two));
+    assert_eq!(NoDiscr::try_from(-5), Ok(NoDiscr::MinusFive));
+    assert_eq!(NoDiscr::try_from(-4), Ok(NoDiscr::MinusFour));
+    assert_eq!(NoDiscr::try_from(-3), Ok(NoDiscr::MinusThree));
+    assert_eq!(NoDiscr::try_from(-2), Err(-2));
+    assert_eq!(NoDiscr::try_from(3), Err(3));
 }

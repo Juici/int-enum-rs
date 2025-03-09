@@ -33,45 +33,23 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
 
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
-    let mut last_discriminant: Option<Expr> = None;
+    let mut from_enum_arms = Vec::with_capacity(variants.len());
+    let mut from_int_arms = Vec::with_capacity(variants.len());
 
-    let from_enum_args = variants.iter().map(|Variant { ident, discriminant, .. }| {
-        let current_discriminant = match discriminant {
-            Some(d) => d.clone(),
-            None => {
-                let next_value = match last_discriminant {
-                    Some(ref last) => quote! { (#last + 1) },
-                    None => quote! { 0 },
-                };
-                syn::Expr::Verbatim(next_value)
-            }
-        };
-        last_discriminant = Some(current_discriminant.clone());
+    let mut next_discriminant = Expr::Verbatim(quote! { 0 });
 
-        quote! {
-            #enum_ident::#ident => #current_discriminant,
-        }
-    });
+    for Variant { ident, discriminant } in variants {
+        let discriminant = discriminant.unwrap_or(next_discriminant);
 
-    let mut last_discriminant: Option<Expr> = None;
+        next_discriminant = Expr::Verbatim(quote! { #discriminant + 1 });
 
-    let try_from_int_args = variants.iter().map(|Variant { ident, discriminant, .. }| {
-        let current_discriminant = match discriminant {
-            Some(d) => d.clone(),
-            None => {
-                let next_value = match last_discriminant {
-                    Some(ref last) => quote! { (#last + 1) },
-                    None => quote! { 0 },
-                };
-                syn::Expr::Verbatim(next_value)
-            }
-        };
-        last_discriminant = Some(current_discriminant.clone());
-
-        quote! {
-            v if v == (#current_discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
-        }
-    });
+        from_enum_arms.push(quote! {
+            #enum_ident::#ident => #discriminant,
+        });
+        from_int_arms.push(quote! {
+            v if v == (#discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
+        });
+    }
 
     let from_enum_impl = quote! {
         #[automatically_derived]
@@ -79,7 +57,7 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
             #[inline]
             fn from(v: #enum_ident #type_generics) -> Self {
                 match v {
-                    #(#from_enum_args)*
+                    #(#from_enum_arms)*
                 }
             }
         }
@@ -93,7 +71,7 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
             #[inline]
             fn try_from(v: #repr) -> ::core::result::Result<Self, #repr> {
                 match v {
-                    #(#try_from_int_args)*
+                    #(#from_int_arms)*
                     v => ::core::result::Result::Err(v),
                 }
             }
