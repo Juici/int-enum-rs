@@ -71,10 +71,7 @@ fn verify_unit_variants(input: &EnumInput) -> Result<()> {
         input.data.variants.iter().filter(|v| !matches!(v.fields, Fields::Unit));
 
     // First non-unit variant.
-    let first = match non_unit_variants.next() {
-        Some(v) => v,
-        None => return Ok(()),
-    };
+    let Some(first) = non_unit_variants.next() else { return Ok(()) };
 
     let mut diag = input
         .ident
@@ -85,7 +82,7 @@ fn verify_unit_variants(input: &EnumInput) -> Result<()> {
 
     // Add warnings for remaining non-unit variants.
     for v in non_unit_variants {
-        diag = diag.span_warning(v.fields.span(), "only unit variants are supported")
+        diag = diag.span_warning(v.fields.span(), "only unit variants are supported");
     }
 
     Err(diag)
