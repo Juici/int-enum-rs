@@ -38,7 +38,7 @@ fn signed() {
 }
 
 #[test]
-fn with_align() {
+fn repr_with_align() {
     #[derive(Debug, PartialEq, IntEnum)]
     #[repr(u16, align(4))]
     enum WithAlign {
@@ -78,8 +78,8 @@ fn discriminant_expr() {
 }
 
 #[test]
-fn no_discriminant() {
-    // Ensuring conformity with the documented behavior of implicit discriminators
+fn missing_discriminants() {
+    // Ensuring conformity with the documented behavior of implicit discriminators.
     // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.implicit
     #[derive(Debug, PartialEq, IntEnum)]
     #[repr(i16)]
@@ -109,4 +109,26 @@ fn no_discriminant() {
     assert_eq!(NoDiscr::try_from(-3), Ok(NoDiscr::MinusThree));
     assert_eq!(NoDiscr::try_from(-2), Err(-2));
     assert_eq!(NoDiscr::try_from(3), Err(3));
+}
+
+#[test]
+fn default_repr_isize() {
+    #[derive(Debug, PartialEq, IntEnum)]
+    enum NoRepr {
+        A = 1,
+    }
+
+    assert_eq!(isize::from(NoRepr::A), 1);
+
+    assert_eq!(NoRepr::try_from(1isize), Ok(NoRepr::A));
+}
+
+// Test case for issue #17.
+// https://github.com/Juici/int-enum-rs/issues/17
+#[test]
+fn allow_error_variant_name_issue17() {
+    #[derive(IntEnum)]
+    enum Issue17 {
+        Error = 0,
+    }
 }

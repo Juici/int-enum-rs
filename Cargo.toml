@@ -13,19 +13,8 @@ repository = "https://github.com/Juici/int-enum-rs"
 [lib]
 proc-macro = true
 
-[features]
-default = []
-colors = ["proc-macro2-diagnostics/colors"]
-
 [dependencies]
 proc-macro2 = "1.0.79"
 proc-macro2-diagnostics = { version = "0.10.1", default-features = false }
 quote = "1.0.35"
 syn = "2.0.53"
-
-[dev-dependencies]
-rustversion = "1.0.14"
-trybuild = "1.0.90"
-
-[build-dependencies]
-version_check = "0.9.4"

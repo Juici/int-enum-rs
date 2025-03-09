@@ -1,13 +1,19 @@
-use std::fmt;
-
 use proc_macro2::{Ident, Span, TokenStream};
-use proc_macro2_diagnostics::SpanDiagnosticExt;
 use quote::ToTokens;
 use syn::punctuated::Punctuated;
-use syn::spanned::Spanned;
-use syn::{Attribute, DataEnum, Expr, Fields, Meta, Token};
+use syn::{Attribute, DataEnum, Generics, Meta, Token};
 
 use crate::Result;
+
+pub struct EnumInput {
+    pub attrs: Vec<Attribute>,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub data: DataEnum,
+}
+
+const VALID_REPRS: &[&str] =
+    &["i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128", "isize", "usize"];
 
 pub struct Repr {
     pub ident: Ident,
@@ -19,95 +25,30 @@ impl ToTokens for Repr {
     }
 }
 
-const VALID_REPRS: &[&str] =
-    &["i8", "u8", "i16", "u16", "i32", "u32", "i64", "u64", "i128", "u128", "isize", "usize"];
+impl Repr {
+    pub fn from_attributes(attrs: &[Attribute]) -> Result<Repr> {
+        for attr in attrs {
+            if !attr.path().is_ident("repr") {
+                continue;
+            }
 
-pub fn get_repr(attrs: &[Attribute]) -> Result<Repr> {
-    let mut repr_span = None::<Span>;
+            let nested = attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?;
 
-    for attr in attrs {
-        if !attr.path().is_ident("repr") {
-            continue;
-        }
+            for meta in nested {
+                let Meta::Path(path) = meta else { continue };
+                let Some(ident) = path.get_ident() else { continue };
 
-        let nested = attr.parse_args_with(Punctuated::<Meta, Token![,]>::parse_terminated)?;
+                let sym = ident.to_string();
+                let sym = sym.strip_prefix("r#").unwrap_or(sym.as_ref());
 
-        for meta in nested {
-            let Meta::Path(path) = meta else { continue };
-            let Some(ident) = path.get_ident() else { continue };
-
-            let sym = ident.to_string();
-            let sym = sym.strip_prefix("r#").unwrap_or(sym.as_ref());
-
-            if VALID_REPRS.contains(&sym) {
-                return Ok(Repr { ident: ident.clone() });
+                if VALID_REPRS.contains(&sym) {
+                    return Ok(Repr { ident: ident.clone() });
+                }
             }
         }
 
-        repr_span = Some(attr.span());
+        // If no repr is specified then default to `isize`.
+        // https://doc.rust-lang.org/reference/items/enumerations.html#r-items.enum.discriminant.repr-rust
+        Ok(Repr { ident: Ident::new("isize", Span::call_site()) })
     }
-
-    Err(match repr_span {
-        Some(span) => span
-            .resolved_at(Span::call_site())
-            .error("missing type in `repr` attribute")
-            .note(format!("valid reprs are {ValidReprs}")),
-        None => Span::call_site().error("missing `repr` attribute"),
-    })
-}
-
-struct ValidReprs;
-
-impl fmt::Display for ValidReprs {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut first = true;
-
-        for repr in VALID_REPRS {
-            if !first {
-                f.write_str(", ")?;
-            }
-            first = false;
-
-            f.write_str("`")?;
-            f.write_str(repr)?;
-            f.write_str("`")?;
-        }
-
-        Ok(())
-    }
-}
-
-pub struct Variant {
-    pub ident: Ident,
-    pub discriminant: Option<Expr>,
-}
-
-pub fn get_variants(enum_ident: &Ident, data: DataEnum) -> Result<Vec<Variant>> {
-    let mut variants = Vec::with_capacity(data.variants.len());
-    let mut iter = data.variants.into_iter();
-
-    let err_iter = loop {
-        let Some(v) = iter.next() else { return Ok(variants) };
-
-        let discriminant = match v.discriminant {
-            Some((_, discriminant)) if matches!(v.fields, Fields::Unit) => Some(discriminant),
-            None => None,
-            _ => break std::iter::once(v).chain(iter),
-        };
-
-        variants.push(Variant { ident: v.ident, discriminant });
-    };
-
-    let mut diag = enum_ident
-        .span()
-        .resolved_at(Span::call_site())
-        .error("enum has variants that are not supported by this trait");
-
-    for v in err_iter {
-        if !matches!(&v.fields, Fields::Unit) {
-            diag = diag.span_warning(v.fields.span(), "only unit variants are supported");
-        }
-    }
-
-    Err(diag)
 }

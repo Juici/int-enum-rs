@@ -1,5 +1,3 @@
-#![cfg_attr(proc_macro_span, feature(proc_macro_span))]
-
 extern crate proc_macro;
 
 mod ast;

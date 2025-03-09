@@ -1,17 +1,11 @@
-use proc_macro2::{Ident, Span, TokenStream};
+use proc_macro2::{Span, TokenStream};
 use proc_macro2_diagnostics::SpanDiagnosticExt;
 use quote::quote;
-use syn::{Attribute, Data, DataEnum, DeriveInput, Expr, Generics};
+use syn::spanned::Spanned;
+use syn::{Data, DeriveInput, Fields, Variant};
 
-use crate::ast::Variant;
-use crate::{ast, Result};
-
-pub struct EnumInput {
-    pub attrs: Vec<Attribute>,
-    pub ident: Ident,
-    pub generics: Generics,
-    pub data: DataEnum,
-}
+use crate::ast::{EnumInput, Repr};
+use crate::Result;
 
 pub fn derive(input: DeriveInput) -> Result<TokenStream> {
     let DeriveInput { attrs, ident, generics, data, .. } = input;
@@ -26,39 +20,24 @@ pub fn derive(input: DeriveInput) -> Result<TokenStream> {
 }
 
 fn derive_enum(input: EnumInput) -> Result<TokenStream> {
+    verify_unit_variants(&input)?;
+
     let EnumInput { attrs, ident: enum_ident, generics, data, .. } = input;
 
-    let repr = ast::get_repr(&attrs)?;
-    let variants = ast::get_variants(&enum_ident, data)?;
+    let repr = Repr::from_attributes(&attrs)?;
 
     let (impl_generics, type_generics, where_clause) = generics.split_for_impl();
 
-    let mut from_enum_arms = Vec::with_capacity(variants.len());
-    let mut from_int_arms = Vec::with_capacity(variants.len());
-
-    let mut next_discriminant = Expr::Verbatim(quote! { 0 });
-
-    for Variant { ident, discriminant } in variants {
-        let discriminant = discriminant.unwrap_or(next_discriminant);
-
-        next_discriminant = Expr::Verbatim(quote! { #discriminant + 1 });
-
-        from_enum_arms.push(quote! {
-            #enum_ident::#ident => #discriminant,
-        });
-        from_int_arms.push(quote! {
-            v if v == (#discriminant) => ::core::result::Result::Ok(#enum_ident::#ident),
-        });
-    }
+    let from_int_arms = data.variants.iter().map(|Variant { ident, .. }| quote! {
+        v if v == #enum_ident::#ident as #repr => ::core::result::Result::Ok(#enum_ident::#ident),
+    });
 
     let from_enum_impl = quote! {
         #[automatically_derived]
         impl #impl_generics ::core::convert::From<#enum_ident #type_generics> for #repr #where_clause {
             #[inline]
             fn from(v: #enum_ident #type_generics) -> Self {
-                match v {
-                    #(#from_enum_arms)*
-                }
+                v as #repr
             }
         }
     };
@@ -85,4 +64,29 @@ fn derive_enum(input: EnumInput) -> Result<TokenStream> {
             #try_from_int_impl
         };
     })
+}
+
+fn verify_unit_variants(input: &EnumInput) -> Result<()> {
+    let mut non_unit_variants =
+        input.data.variants.iter().filter(|v| !matches!(v.fields, Fields::Unit));
+
+    // First non-unit variant.
+    let first = match non_unit_variants.next() {
+        Some(v) => v,
+        None => return Ok(()),
+    };
+
+    let mut diag = input
+        .ident
+        .span()
+        .resolved_at(Span::call_site())
+        .error("enum has variants that are not supported by this trait")
+        .span_warning(first.fields.span(), "only unit variants are supported");
+
+    // Add warnings for remaining non-unit variants.
+    for v in non_unit_variants {
+        diag = diag.span_warning(v.fields.span(), "only unit variants are supported")
+    }
+
+    Err(diag)
 }
