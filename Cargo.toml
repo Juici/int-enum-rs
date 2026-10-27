@@ -1,11 +1,11 @@
 [package]
 name = "int-enum"
-version = "1.2.0"
+version = "1.3.0"
 authors = ["Juici <juicy66173@gmail.com>"]
 description = "A derive macro for conversion between integer and enum types."
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.70"
+rust-version = "1.71"
 
 documentation = "https://docs.rs/int-enum"
 repository = "https://github.com/Juici/int-enum-rs"
@@ -14,7 +14,7 @@ repository = "https://github.com/Juici/int-enum-rs"
 proc-macro = true
 
 [dependencies]
-proc-macro2 = "1.0.79"
+proc-macro2 = "1.0"
 proc-macro2-diagnostics = { version = "0.11", default-features = false }
-quote = "1.0.35"
+quote = "1.0"
 syn = "3.0"
